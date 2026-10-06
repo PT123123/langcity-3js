@@ -94,7 +94,7 @@ let player = null;
 await loadWords();
 const planet = await loadPlanet();
 scene.add(planet.group);
-const { town, interactables, colliders, ticks, buildingBoxes, spawnPx } = await buildTownFromPlanetJson(scene, planet.surfaceAt);
+const { town, interactables, colliders, ticks, buildingBoxes, spawnPx } = await buildTownFromPlanetJson(scene, planet);
 phaseCtx.glowSprites = collectGlows(town);
 
 // ---------- 材质替换:一切 MeshStandardMaterial → messenger 风格 ----------
@@ -121,7 +121,8 @@ function mseSwap(root) {
     // Kenney/polypizza 白亮 colormap 压一档,防止平涂风里过曝
     if (m.map && m.color) {
       const src = (m.map.image && m.map.image.src) || String(m.map.source?.data?.src || '');
-      if (//tex//.test(src)) m.color.setRGB(1.7, 1.6, 1.45);
+      // 注意别写成 //tex// —— 那会被当成行注释，整行 if 条件被吞掉
+      if (/\/tex\//.test(src)) m.color.setRGB(1.7, 1.6, 1.45);
       else m.color.multiplyScalar(0.62);
     }
     // 纯黑无贴图件(colormap 缺失/轮胎)在平涂风里会读成"洞",抬到深灰

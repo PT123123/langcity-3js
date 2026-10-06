@@ -5,32 +5,36 @@ import { phaseEmissives } from './materials.js';
 
 export const PHASES = {
   morning: {
-    label: '晨', sunElev: 16, sunAzim: 95, sunColor: 0xffb27a, sunIntensity: 0.95,
-    hemiSky: 0xbcc8d8, hemiGround: 0x8a7a68, hemiIntensity: 0.55,
+    label: '晨', sunElev: 16, sunAzim: 95, sunColor: 0xffb27a, sunIntensity: 1.5,
+    hemiSky: 0xbcc8d8, hemiGround: 0x8a7a68, hemiIntensity: 0.5,
+    fillColor: 0xbcd0e8, fillIntensity: 0.18,
     skyTop: 0x7f93b4, skyMid: 0xd8c2ae, skyHorizon: 0xf2c99a,
     fog: 0xd8c9b0, fogNear: 55, fogFar: 240,
     bloomThreshold: 0.82, exposure: 1.0,
     night: 0,
   },
   day: {
-    label: '昼', sunElev: 58, sunAzim: 160, sunColor: 0xfff4e0, sunIntensity: 1.35,
-    hemiSky: 0xc9d4e0, hemiGround: 0x9a8d7c, hemiIntensity: 0.6,
+    label: '昼', sunElev: 58, sunAzim: 160, sunColor: 0xfff4e0, sunIntensity: 1.9,
+    hemiSky: 0xc9d4e0, hemiGround: 0x9a8d7c, hemiIntensity: 0.55,
+    fillColor: 0xcfe0f0, fillIntensity: 0.2,
     skyTop: 0x6f87ad, skyMid: 0xa8bccb, skyHorizon: 0xdfe3e2,
     fog: 0xdfe3e8, fogNear: 70, fogFar: 300,
     bloomThreshold: 0.9, exposure: 1.05,
     night: 0,
   },
   dusk: {
-    label: '暮', sunElev: 9, sunAzim: 250, sunColor: 0xff9e5e, sunIntensity: 1.5,
-    hemiSky: 0x9a93b4, hemiGround: 0x77685a, hemiIntensity: 0.72,
+    label: '暮', sunElev: 20, sunAzim: 250, sunColor: 0xff9e5e, sunIntensity: 2.1,
+    hemiSky: 0x9a93b4, hemiGround: 0x77685a, hemiIntensity: 0.5,
+    fillColor: 0x8fa2c8, fillIntensity: 0.2,
     skyTop: 0x5b6b8c, skyMid: 0xb98a8f, skyHorizon: 0xe8b27d,
     fog: 0xc9957a, fogNear: 62, fogFar: 300,
     bloomThreshold: 0.72, exposure: 1.08,
     night: 0,
   },
   night: {
-    label: '夜', sunElev: 40, sunAzim: 300, sunColor: 0x8fa8d8, sunIntensity: 0.45,
+    label: '夜', sunElev: 40, sunAzim: 300, sunColor: 0x8fa8d8, sunIntensity: 0.55,
     hemiSky: 0x3a4468, hemiGround: 0x2c2a34, hemiIntensity: 0.7,
+    fillColor: 0x4a5a88, fillIntensity: 0.15,
     skyTop: 0x141830, skyMid: 0x272e4d, skyHorizon: 0x4a4468,
     fog: 0x2b2f4a, fogNear: 45, fogFar: 200,
     bloomThreshold: 0.5, exposure: 1.15,
@@ -101,16 +105,46 @@ export function makeSkyDome(radius = 900) {
   return { mesh, mat };
 }
 
-/** 时刻应用：改 sky uniform / 灯 / 雾 / 自发光 / bloom / 曝光 */
+/** 世界系的太阳方向：只给「站在世界北极」的东西用（lab 预览、天空盘的赤道上视角）。
+ *  星球玩法里别拿它直接照地面——见 sunDirLocal。 */
+function sunDirWorld(elevDeg, azimDeg) {
+  const elev = THREE.MathUtils.degToRad(elevDeg);
+  const azim = THREE.MathUtils.degToRad(azimDeg);
+  return new THREE.Vector3(
+    Math.cos(elev) * Math.cos(azim), Math.sin(elev), Math.cos(elev) * Math.sin(azim)
+  );
+}
+
+/** 把时刻参数里的 (仰角, 方位) 解释成「玩家脚下的当地地平坐标」再换到世界系。
+ *  azim=0 指向世界 +X 投影到当地切平面的方向，与 sunDirWorld 在 up=(0,1,0) 时完全一致。
+ *
+ *  为什么非要当地系：镇区帽在余纬 31°，当地 up 与世界 +Y 差 31°，而方位 250° 又几乎正对着
+ *  镇区的经度反面。世界系摆法下实测出生点 dot(阳光, 地面法线) = -0.348 —— 黄昏的太阳
+ *  其实落在镇区地平线以下，整张地表吃不到直射光，只剩 hemiSky 那盏薰衣草色半球光在照，
+ *  这就是「地面像鬼、看不出是什么材质」的根因。太阳仰角必须是「相对于你脚下」。 */
+export function sunDirLocal(elevDeg, azimDeg, up) {
+  const u = up.clone().normalize();
+  let a = new THREE.Vector3(1, 0, 0).addScaledVector(u, -u.x);
+  if (a.lengthSq() < 1e-6) a.set(0, 0, 1).addScaledVector(u, -u.z);
+  a.normalize();
+  const b = new THREE.Vector3().crossVectors(a, u);
+  const el = THREE.MathUtils.degToRad(elevDeg);
+  const az = THREE.MathUtils.degToRad(azimDeg);
+  const ce = Math.cos(el);
+  return a.multiplyScalar(ce * Math.cos(az))
+    .addScaledVector(b, ce * Math.sin(az))
+    .addScaledVector(u, Math.sin(el))
+    .normalize();
+}
+
+/** 时刻应用：改 sky uniform / 灯 / 雾 / 自发光 / bloom / 曝光
+ *  注意：太阳/补光的 position 只是初值，主循环每帧按玩家当地 up 重算（见 main.js loop）。 */
 export function applyPhase(name, ctx) {
   const P = PHASES[name] || PHASES.dusk;
   const { sky, sun, hemi, fill, scene, bloomPass, renderer, glowSprites, cloudMat, petalMats } = ctx;
 
-  const elev = THREE.MathUtils.degToRad(P.sunElev);
-  const azim = THREE.MathUtils.degToRad(P.sunAzim);
-  const sunDir = new THREE.Vector3(
-    Math.cos(elev) * Math.cos(azim), Math.sin(elev), Math.cos(elev) * Math.sin(azim)
-  );
+  const sunDir = sunDirWorld(P.sunElev, P.sunAzim);
+  ctx.phase = P;   // 主循环要拿 sunElev/sunAzim 换当地系
 
   sky.mat.uniforms.topColor.value.set(P.skyTop);
   sky.mat.uniforms.midColor.value.set(P.skyMid);
@@ -127,8 +161,8 @@ export function applyPhase(name, ctx) {
   hemi.groundColor.set(P.hemiGround);
   hemi.intensity = P.hemiIntensity;
 
-  fill.color.set(P.sunColor);
-  fill.intensity = 0.18 * Math.min(1, P.sunIntensity);
+  fill.color.set(P.fillColor ?? P.sunColor);   // 补光走冷色，才和暖主光拉开冷暖层次（HANDOFF §2.4）
+  fill.intensity = P.fillIntensity ?? 0.18;
   fill.position.copy(sunDir).multiplyScalar(-100);
 
   scene.fog.color.set(P.fog);

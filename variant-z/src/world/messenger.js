@@ -7,6 +7,7 @@
 // 本模块不改 CommandCode 的 materials.js;集成方式见 docs/MESSENGER_STYLE.md §5。
 import * as THREE from 'three';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { hdTexture } from './handDrawn.js';
 
 // ---------- 共享状态(单例 uniform,一次更新全体生效) ----------
 export const MSE = {
@@ -35,11 +36,33 @@ export function mseNoise() {
   return t;
 }
 
+// 未挂手绘细节的材质也要有 tDetail 可采样:1×1 纯白 + amt=0,乘进去等于没乘。
+// 同一套 shader 源码 → 共享 'mse' program,只有 uniform 值不同。
+let _whiteTex = null;
+function mseWhite() {
+  if (!_whiteTex) {
+    _whiteTex = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
+    _whiteTex.needsUpdate = true;
+  }
+  return _whiteTex;
+}
+/** 读 mat.userData.hd(handDrawn.js 打的标签),返回这一路的三个 detail uniform */
+function mseDetailUniforms(mat) {
+  const hd = mat.userData && mat.userData.hd;
+  return {
+    tDetail: { value: hd ? hdTexture(hd.kind) : mseWhite() },
+    uDetailScale: { value: hd ? hd.scale : 1 },
+    uDetailAmt: { value: hd ? hd.amt : 0 },
+  };
+}
+
 // ---------- GLSL 公共块 ----------
 const COMMON_GLSL = /* glsl */`
   uniform sampler2D tNoise;
+  uniform sampler2D tDetail;
   uniform vec3 uSunDir;
   uniform float uSunRef, uNoiseScale, uNoiseAmt, uLitLo, uLitHi, uSunLift, uHueShift, uValueMul, uAmbient, uMseTime, uDither;
+  uniform float uDetailScale, uDetailAmt;
   varying vec3 vMseWPos;
   varying vec3 vMseWNrm;
   vec3 mseHsv(vec3 c) {
@@ -75,6 +98,10 @@ const OPAQUE_GLSL = /* glsl */`
     #endif
     vec3 n1 = mseTri(tNoise, N, vMseWPos * uNoiseScale);
     vec3 base = diffuseColor.rgb * (1.0 + (n1.r - 0.5) * 2.0 * uNoiseAmt);
+    // 手绘细节层(handDrawn.js):世界空间三平面,白底细线乘进漫反射。
+    // 走世界坐标而不是 UV —— 这些 GLB 的 UV 指向仓库里缺失的 Kenney 图集。
+    vec3 det = mseTri(tDetail, N, vMseWPos * uDetailScale);
+    base *= mix(vec3(1.0), det, uDetailAmt);
     // 二值化:受光/背光两档;受光方向向天顶抬升(低仰角太阳时地面仍读作受光)
     vec3 Ldir = normalize(mix(normalize(uSunDir), vec3(0.0, 1.0, 0.0), uSunLift));
     float lit = smoothstep(uLitLo, uLitHi, dot(N, Ldir));

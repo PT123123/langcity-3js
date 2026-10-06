@@ -23,10 +23,15 @@
         </div>
         <button id="bgm-btn" title="关闭音乐">♪</button>
         <button id="vocab-btn" title="词汇本">词汇本</button>
+        <button id="settings-btn" title="设置">⚙</button>
       </div>
-      <div id="hint">WASD 行走 ・ Shift 奔跑 ・ 拖动 转视角 ・ 空格 跳跃 / 跳向墙面攀爬（W/S 上下）・ <b>F / 拍照键</b> 拍照</div>
+      <div id="hint">WASD 行走 ・ Shift 奔跑 ・ 拖动 转视角 ・ 空格 跳跃/连跳（空中再按一次） / 跳向墙面攀爬（W/S 上下）・ <b>F / 拍照键</b> 拍照 ・ <b>M / 点小地图</b> 打开地图传送</div>
       <button id="photo-btn"><span>📷</span><label>拍照</label></button>
       <div id="touch-joystick"><div id="joy-knob"></div></div>
+      <div id="minimap-wrap">
+        <div id="minimap" title="打开地图（M）"><canvas id="minimap-canvas"></canvas></div>
+        <div id="minimap-cap">地图 ・ 点击传送</div>
+      </div>
     </div>
     <div id="flash"></div>
     <div id="word-card" class="hidden">
@@ -46,6 +51,36 @@
       </div>
       <div id="vocab-progress"></div>
       <div id="vocab-list"></div>
+    </div>
+    <div id="bigmap" class="hidden">
+      <div id="bigmap-panel">
+        <div id="bigmap-head">
+          <h2>日语星 ・ 地图</h2>
+          <button id="bigmap-close">✕</button>
+        </div>
+        <canvas id="bigmap-canvas"></canvas>
+        <div id="bigmap-tip">点击地点图标传送到该处 ・ M / ✕ 关闭</div>
+      </div>
+    </div>
+    <div id="map-toast" class="hidden"></div>
+    <div id="settings" class="hidden">
+      <div id="settings-panel">
+        <div id="settings-head">
+          <h2>设置</h2>
+          <button id="settings-close">✕</button>
+        </div>
+        <div class="set-row">
+          <div class="set-label">
+            <span class="set-title">无限连跳</span>
+            <span class="set-desc">开启后猫在空中可反复起跳（关闭则最多二段跳）</span>
+          </div>
+          <label class="sw">
+            <input type="checkbox" id="toggle-infinite-jump" />
+            <span class="sw-track"></span>
+            <span class="sw-thumb"></span>
+          </label>
+        </div>
+      </div>
     </div>
     <div id="loading">正在前往日语星…</div>
   </div>

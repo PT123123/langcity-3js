@@ -3,15 +3,24 @@ import * as THREE from 'three';
 
 const cache = new Map();
 
+/**
+ * 全场景没有 envMap（见 planetMap.js 水面那段注释），MeshStandardMaterial 的
+ * metalness 于是只有副作用：按 (1-m) 削掉漫反射，而削下来的部分要去反射环境贴图——
+ * 环境贴图是空的，什么都反射不到。实测金属蓝屋脊（m=0.4）正对太阳时像素只有 rgb(2,1,2)，
+ * 同一栋楼的白墙是 rgb(75,60,62)。所以工厂入口一律把 metal 归零：
+ * 「金属感」改由明亮基色 + 低 roughness 的镜面高光来表达。
+ */
+const METAL = 0;
+
 /** 基础标准材质（共享实例，按参数缓存） */
-export function M(color, { rough = 0.85, metal = 0, emissive = 0x000000, emissiveIntensity = 1, side, flatShading, transparent, opacity, map, doubleSided } = {}) {
-  const key = `M|${color}|${rough}|${metal}|${emissive}|${emissiveIntensity}|${side || ''}|${flatShading ? 1 : 0}|${transparent ? 1 : 0}|${opacity ?? 1}|${map ? map.uuid : ''}|${doubleSided ? 1 : 0}`;
+export function M(color, { rough = 0.85, metal = 0, emissive = 0x000000, emissiveIntensity = 1, side, flatShading, transparent, opacity, map, roughnessMap, doubleSided } = {}) {
+  const key = `M|${color}|${rough}|${metal}|${emissive}|${emissiveIntensity}|${side || ''}|${flatShading ? 1 : 0}|${transparent ? 1 : 0}|${opacity ?? 1}|${map ? map.uuid : ''}|${roughnessMap ? roughnessMap.uuid : ''}|${doubleSided ? 1 : 0}`;
   if (cache.has(key)) return cache.get(key);
   const mat = new THREE.MeshStandardMaterial({
-    color, roughness: rough, metalness: metal,
+    color, roughness: rough, metalness: METAL,
     emissive, emissiveIntensity,
     transparent, opacity,
-    map,
+    map, roughnessMap,
     side: side || (doubleSided ? THREE.DoubleSide : THREE.FrontSide),
     flatShading: !!flatShading,
   });
@@ -59,35 +68,52 @@ export function J(baseColor, rough = 0.85, metal = 0, jitterKey = '', extra = {}
 const texLoader = new THREE.TextureLoader();
 const texCache = new Map();
 
-/** 单张贴图：按 (name,tag,repeat) 缓存。col 走 sRGB，nrm/rgh 线性。异步加载，到位后自动显示 */
+/** 单张贴图：按 (name,tag,repeat) 缓存。col 走 sRGB，nrm/rgh 线性。异步加载，到位后自动显示。
+ *  取不到图（贴图名打错、public/tex 少文件）会记 lost 并通知挂上来的材质，
+ *  因为 three.js 对没有 image 的 sampler 返回**黑**而不是「先显示纯色」——
+ *  diffuse = color × map，整面墙/整片屋顶会被画成一块悬在空中的黑板。 */
 export function TEX(name, tag = 'col', rx = 1, ry = 1) {
   const key = `${name}|${tag}|${rx}|${ry}`;
   if (texCache.has(key)) return texCache.get(key);
-  const t = texLoader.load(`./tex/${name}_${tag}.jpg`);
+  const t = texLoader.load(`./tex/${name}_${tag}.jpg`, undefined, undefined, () => {
+    t.userData.lost = true;
+    for (const f of t.userData.watchers) f();
+  });
   t.colorSpace = tag === 'col' ? THREE.SRGBColorSpace : THREE.NoColorSpace;
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(rx, ry);
   t.anisotropy = 8;
+  t.userData.watchers = new Set();
+  t.userData.lost = false;
   texCache.set(key, t);
   return t;
 }
 
 /**
  * PBR 材质：贴图三件套 + 轻微明度微差（tint 0.9~1.1），替代纯色+J 的位置。
- * 加载完成前以 tint 颜色显示，避免白闪。
+ * 加载完成前以 tint 颜色显示，避免白闪；任一张取不到就摘掉贴图退回 tint 纯色。
  */
 const pbrCache = new Map();
 export function PBR(name, { rx = 2, ry = 2, rough = 0.85, metal = 0, tint = 1 } = {}) {
   const key = `${name}|${rx}|${ry}|${rough}|${metal}|${tint}`;
   if (pbrCache.has(key)) return pbrCache.get(key);
   const col = new THREE.Color(tint, tint, tint);
+  const map = TEX(name, 'col', rx, ry);
+  const nrm = TEX(name, 'nrm', rx, ry);
+  const rgh = TEX(name, 'rgh', rx, ry);
   const mat = new THREE.MeshStandardMaterial({
-    color: col, roughness: rough, metalness: metal,
-    map: TEX(name, 'col', rx, ry),
-    normalMap: TEX(name, 'nrm', rx, ry),
-    roughnessMap: TEX(name, 'rgh', rx, ry),
+    color: col, roughness: rough, metalness: METAL,
+    map,
+    normalMap: nrm,
+    roughnessMap: rgh,
     normalScale: new THREE.Vector2(0.6, 0.6), // 风格化：法线只提体积不抢戏
   });
+  const drop = () => {
+    if (mat.map === null && mat.normalMap === null && mat.roughnessMap === null) return;
+    mat.map = mat.normalMap = mat.roughnessMap = null;
+    mat.needsUpdate = true;
+  };
+  for (const t of [map, nrm, rgh]) { t.userData.watchers.add(drop); if (t.userData.lost) drop(); }
   pbrCache.set(key, mat);
   return mat;
 }
@@ -224,22 +250,26 @@ export function signTexture(text, { bg = '#f5efe2', fg = '#4a4238', vertical = f
   return toTex(c);
 }
 
-/** 窗面纹理：暖色房间 + 窗框十字格 */
+/** 窗面纹理：白天反天空、夜里透室内，外加细窗框格 */
 export function windowTexture(cols = 2, rows = 2, warm = '#e8c88f') {
   const [c, ctx] = canvas(128, 128);
-  // 夜晚/黄昏的房间透光
+  // 白天 glowMat 的 emissiveIntensity=0，这张贴图就是窗子的全部长相。原来画的是
+  // 「夜里亮着的房间」：整面暖棕渐变 + 7px 深灰框。贴到站房 4.6 m 宽的玻璃带上，
+  // 窗框被放大成 0.25 m 的黑梁、格子中心糊成黑洞
+  // （实测窗心 rgb(17,16,12) vs 旁边同一面墙 rgb(135,125,104)）。
+  // 改成白天优先：上半反天空、下半才透室内暖光，框收到 3px（≈0.11 m 截面）并抬成中灰。
   const g = ctx.createLinearGradient(0, 0, 0, 128);
-  g.addColorStop(0, warm); g.addColorStop(1, '#b98a5e');
+  g.addColorStop(0, '#c6d6de'); g.addColorStop(0.55, warm); g.addColorStop(1, '#a8825c');
   ctx.fillStyle = g; ctx.fillRect(0, 0, 128, 128);
-  // 家具剪影暗示
-  ctx.fillStyle = 'rgba(90,60,40,0.5)';
-  ctx.fillRect(14, 88, 30, 40);
-  ctx.fillRect(84, 70, 26, 58);
+  // 家具剪影暗示（原来 0.5 的不透明深棕块，白天读成两块脏影子）
+  ctx.fillStyle = 'rgba(90,60,40,0.22)';
+  ctx.fillRect(14, 96, 30, 32);
+  ctx.fillRect(84, 82, 26, 46);
   // 窗框
-  ctx.strokeStyle = '#6b6258'; ctx.lineWidth = 7;
+  ctx.strokeStyle = '#8b8478'; ctx.lineWidth = 3;
   for (let i = 1; i < cols; i++) { const x = (128 / cols) * i; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 128); ctx.stroke(); }
   for (let i = 1; i < rows; i++) { const y = (128 / rows) * i; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(128, y); ctx.stroke(); }
-  ctx.lineWidth = 10; ctx.strokeRect(0, 0, 128, 128);
+  ctx.lineWidth = 5; ctx.strokeRect(0, 0, 128, 128);
   return toTex(c);
 }
 
@@ -287,8 +317,11 @@ export const phaseEmissives = []; // {mat, day:0, dusk:0.85, night:1, morning:0.
 
 /** 自发光窗/灯箱材质（进 phaseEmissives，随时刻变亮） */
 export function glowMat(baseEmissive = 0xffd9a0, { rough = 0.4, metal = 0, map, intensity = 1.0 } = {}) {
+  // 带 map 的是窗面/灯箱：白天 emissiveIntensity=0，全靠漫反射。底色沿用 0x2a2622 的话，
+  // 乘上暖色窗贴图整扇窗会糊成一个纯黑方洞（mseSwap 对无贴图件有同款「抬到深灰」的规矩）。
+  // 抬成冷灰蓝白天读作反光玻璃，夜晚由 emissive 接管、底色基本看不见。
   const mat = new THREE.MeshStandardMaterial({
-    color: 0x2a2622, roughness: rough, metalness: metal,
+    color: map ? 0xa8b6bd : 0x2a2622, roughness: rough, metalness: METAL,
     emissive: baseEmissive, emissiveIntensity: 0, map,
   });
   mat.userData.glowScale = intensity;

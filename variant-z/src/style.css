@@ -43,7 +43,7 @@ html, body {
   position: absolute; top: 14px; right: 14px;
   display: flex; gap: 8px; align-items: center;
 }
-#discovered-chip, #time-switch button, #vocab-btn, #bgm-btn {
+#discovered-chip, #time-switch button, #vocab-btn, #bgm-btn, #settings-btn {
   font-family: 'Noto Sans JP', sans-serif;
   font-size: 13px;
   color: var(--ink);
@@ -60,9 +60,138 @@ html, body {
 #time-switch button { padding: 6px 11px; box-shadow: none; background: transparent; }
 #time-switch button.active { background: var(--vermilion); color: #fff8f0; }
 #vocab-btn { font-weight: 500; }
-#vocab-btn:hover, #time-switch button:hover, #bgm-btn:hover { filter: brightness(1.05); }
+#vocab-btn:hover, #time-switch button:hover, #bgm-btn:hover, #settings-btn:hover { filter: brightness(1.05); }
 #bgm-btn { font-size: 15px; padding: 6px 11px; }
 #bgm-btn.muted { opacity: 0.45; }
+#settings-btn { font-size: 14px; padding: 6px 11px; }
+
+/* ---------- minimap（右上角） ---------- */
+#minimap-wrap {
+  position: absolute; top: 58px; right: 14px;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
+  pointer-events: none; /* 覆盖 #ui-layer > * 的 auto，点击只留给地图本体 */
+}
+#minimap {
+  pointer-events: auto;
+  width: 158px; height: 122px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #aecdd9;
+  border: 2px solid rgba(74, 66, 56, 0.55);
+  box-shadow: 0 2px 12px rgba(20, 16, 10, 0.28);
+  cursor: pointer;
+  transition: transform .15s;
+}
+#minimap:hover { transform: scale(1.03); }
+#minimap-canvas { width: 100%; height: 100%; display: block; }
+#minimap-cap {
+  font-size: 10px; letter-spacing: 1px;
+  color: rgba(255, 250, 240, 0.92);
+  background: rgba(30, 26, 22, 0.38);
+  padding: 3px 9px; border-radius: 999px;
+  backdrop-filter: blur(4px);
+}
+@media (hover: none) { #minimap-cap { display: none; } #minimap { width: 124px; height: 96px; } }
+
+/* ---------- big map（传送面板） ---------- */
+#bigmap {
+  position: absolute; inset: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(20, 18, 24, 0.45);
+  backdrop-filter: blur(3px);
+}
+#bigmap.hidden { display: none; }
+#bigmap-panel {
+  background: var(--washi-t);
+  border-radius: 20px;
+  box-shadow: 0 18px 60px rgba(15, 12, 8, 0.45), 0 2px 0 rgba(255,255,255,0.6) inset;
+  padding: 16px 18px 13px;
+  animation: cardin .3s cubic-bezier(.2,1.4,.4,1);
+  max-width: 94vw;
+}
+#bigmap-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px;
+}
+#bigmap-head h2 { font-family: 'Noto Serif JP', serif; font-size: 19px; }
+#bigmap-close { border: none; background: none; font-size: 18px; color: var(--ink-soft); cursor: pointer; }
+#bigmap-canvas {
+  display: block;
+  width: min(640px, 86vw);
+  aspect-ratio: 13 / 10;
+  border-radius: 12px;
+  border: 2px solid rgba(74, 66, 56, 0.35);
+  background: #aecdd9;
+}
+#bigmap-tip {
+  text-align: center;
+  font-size: 12px; color: var(--ink-soft);
+  margin-top: 9px;
+}
+
+/* ---------- settings（设置面板） ---------- */
+#settings {
+  position: absolute; inset: 0; z-index: 45;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(20, 18, 24, 0.45);
+  backdrop-filter: blur(3px);
+}
+#settings.hidden { display: none; }
+#settings-panel {
+  background: var(--washi-t);
+  border-radius: 20px;
+  box-shadow: 0 18px 60px rgba(15, 12, 8, 0.45), 0 2px 0 rgba(255,255,255,0.6) inset;
+  padding: 16px 20px 18px;
+  width: min(380px, 92vw);
+  animation: cardin .3s cubic-bezier(.2,1.4,.4,1);
+}
+#settings-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 6px;
+}
+#settings-head h2 { font-family: 'Noto Serif JP', serif; font-size: 19px; }
+#settings-close { border: none; background: none; font-size: 18px; color: var(--ink-soft); cursor: pointer; }
+.set-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 12px 4px;
+}
+.set-label { display: flex; flex-direction: column; gap: 3px; }
+.set-title { font-size: 14px; font-weight: 500; }
+.set-desc { font-size: 11px; line-height: 1.5; color: var(--ink-soft); }
+.sw { position: relative; width: 46px; height: 26px; flex: none; }
+.sw input {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  margin: 0; opacity: 0; cursor: pointer; z-index: 1;
+}
+.sw-track {
+  position: absolute; inset: 0; border-radius: 999px;
+  background: rgba(74, 66, 56, 0.22);
+  transition: background .18s;
+}
+.sw-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  transition: transform .18s;
+}
+.sw input:checked ~ .sw-track { background: var(--vermilion); }
+.sw input:checked ~ .sw-thumb { transform: translateX(20px); }
+
+/* ---------- teleport toast ---------- */
+#map-toast {
+  position: absolute; left: 50%; bottom: 118px;
+  transform: translateX(-50%);
+  background: var(--washi-t);
+  color: var(--ink);
+  font-size: 14px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  box-shadow: 0 4px 18px rgba(20, 16, 10, 0.3);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+  z-index: 45;
+}
+#map-toast.hidden { display: none; }
 
 /* ---------- hint ---------- */
 #hint {

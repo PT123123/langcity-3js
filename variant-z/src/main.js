@@ -7,14 +7,17 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
-import { makeSkyDome, applyPhase } from './world/sky.js';
+import { makeSkyDome, applyPhase, sunDirLocal } from './world/sky.js';
 import { loadPlanet, dirFromPx, R } from './world/planetMap.js';
 import { buildTownFromPlanetJson } from './world/town.js';
+import { scatterDetails } from './world/scatter.js';
+import { makeAudit } from './world/mapAudit.js';
 import { collectGlows } from './world/props.js';
 import { Player } from './player/controller.js';
 import { InteractSystem } from './game/interact.js';
 import { Hud } from './game/hud.js';
 import { loadWords } from './game/words.js';
+import { GameMap, LANDMARKS } from './game/map.js';
 import { initBGM } from './game/bgm.js';
 import {
   mseFromMaterial, mseGround, makeOutlinePass, makeLUTPass, mseUpdate, outlineSync,
@@ -56,7 +59,7 @@ sun.shadow.intensity = 0.45; // 最轻微:影子淡淡的,只做接触感不做�
 sun.shadow.autoUpdate = false; // 隔帧手动更新(见 loop),阴影开销减半
 scene.add(sun, sun.target);
 const fill = new THREE.DirectionalLight(0xff9e5e, 0.25);
-scene.add(fill);
+scene.add(fill, fill.target);
 
 // ---------- 天空 ----------
 const sky = makeSkyDome(900);
@@ -128,7 +131,7 @@ const gradePass = new ShaderPass({
 if (!PLAIN) composer.addPass(gradePass);
 
 // ---------- 异步启动：词库 → 星球 GLB → planet.json 摆放 ----------
-let player, interact, hud;
+let player, interact, hud, gameMap;
 const clock = new THREE.Clock();
 let elapsed = 0;
 window.__err = null;
@@ -167,7 +170,7 @@ async function boot() {
       if (isLeaf && m.alphaMap) { m.alphaMap = null; m.alphaTest = 0; m.transparent = false; }
       if (isLeaf) m.color.set(0x9db884);
       // LangCity 照片 PBR 贴图件提亮成暖灰;Kenney/polypizza 白亮 colormap 压一档防过曝
-      if (m.map && m.color) {
+      if (m.map && m.color && !m.userData.mseKeep) {
         const src = (m.map.image && m.map.image.src) || String(m.map.source?.data?.src || '');
         if (/tex/.test(src)) m.color.setRGB(1.7, 1.6, 1.45);
         else m.color.multiplyScalar(0.62);
@@ -183,8 +186,10 @@ async function boot() {
   }
   mseSwap(planet.group);
 
-  const { town, interactables, colliders, ticks, buildingBoxes, spawnPx } = await buildTownFromPlanetJson(scene, planet.surfaceAt);
+  const { town, interactables, colliders, ticks, buildingBoxes, spawnPx, stats: townStats } = await buildTownFromPlanetJson(scene, planet);
   mseSwap(town);
+  // 手绘撒细节：路缝杂草/碎石/岩石堆（建筑圈与水面除外）
+  mseSwap(scatterDetails(scene, planet, colliders));
   phaseCtx.glowSprites = collectGlows(town);
   applyPhase('dusk', phaseCtx); // 重放:build 时的自发光窗/灯此刻才注册进 phaseEmissives,初始 applyPhase 时还是空表
 
@@ -204,14 +209,35 @@ async function boot() {
       else hud.flash();
     },
     onPhase: (p) => applyPhase(p, phaseCtx),
+    onInfiniteJump: (on) => { player.infiniteJumps = on; },
   });
 
-  window.__dbg = { player, camera, scene, interact, THREE };
+  // ---------- 地图 + 传送 ----------
+  player.waterRadius = planet.waterRadius;
+  gameMap = new GameMap({
+    onTeleport: (px, py) => { player.teleportTo(px, py); hud.flash(); },
+  });
+  gameMap.player = player;
+  await gameMap.bake(planet, townStats); // 底图射线烘焙 + 并图后的街网/建筑/真实地标位置
+  ticks.push((t) => gameMap.tickMini(t)); // 右上角小地图逐帧刷新
+
+  window.__dbg = {
+    player, camera, scene, interact, THREE, planet, town, colliders, buildingBoxes, interactables,
+    gameMap,
+    surfaceAt: planet.surfaceAt, spawnPx, townStats, audit: makeAudit(planet, town), dirFromPx,
+    renderer, composer, canvas, alignLightsToPlayer,   // 离屏复验用：体检截图要把相机摆到玩家视角再画一帧
+    setPhase: (p) => applyPhase(p, phaseCtx),          // 体检要能自己挑时段：黄昏灯下判断材质颜色会误判
+  };
+  if (_q.get('audit')) runAuditReport();
   document.getElementById('loading').classList.add('off');
   hud.refreshChip();
   initBGM(); // 首次手势自动开播，♪ 按钮可开关
 
   // ---------- 存档 ----------
+  // ?fresh=1 跳过读档（和根目录城市版同一个口径）。以前这个参数在这里根本没人接，
+  // 于是「我明明重置了页面」的复验截图其实一直站在上一轮走到的位置上看镇子——
+  // 太阳跟着玩家定向，玩家跑到星球背面，镇区就整个黑掉。踩坑记录见 MAP-TWO-APPS.md。
+  if (_q.get('fresh') === '1') localStorage.removeItem('langcity3jz_player');
   try {
     const s = JSON.parse(localStorage.getItem('langcity3jz_player') || 'null');
     if (s) player.loadState(s);
@@ -223,6 +249,22 @@ async function boot() {
   loop(ticks);
 }
 
+/** 把三盏灯搬到玩家当地的水平系里。
+ *  世界系摆太阳会让镇区整个落在背光半球（实测出生点 dot(阳光,地面法线) = -0.348），
+ *  地面只剩薰衣草色半球光在照 —— 那就是「像鬼一样的地面」。详见 sky.js:sunDirLocal。
+ *  单独抽出来是为了离屏截图：页签在后台时 rAF 停了，体检脚本要能手动补上这一帧的灯。 */
+function alignLightsToPlayer() {
+  const up = player.normal;
+  const sd = sunDirLocal(phaseCtx.phase.sunElev, phaseCtx.phase.sunAzim, up);
+  sky.mat.uniforms.sunDir.value.copy(sd);
+  sun.target.position.copy(player.mesh.position);
+  sun.position.copy(sun.target.position).addScaledVector(sd, 110);
+  fill.target.position.copy(player.mesh.position);
+  fill.position.copy(player.mesh.position).addScaledVector(sd, -100);
+  hemi.position.copy(up).multiplyScalar(100); // 半球光的天顶 = 你脚下的「上」(three r170 拿灯的世界位置当方向)
+  return sd;
+}
+
 function loop(ticks) {
   requestAnimationFrame(() => loop(ticks));
   try {
@@ -232,9 +274,8 @@ function loop(ticks) {
     player.update(dt, elapsed);
     player.updateCamera(camera, dt);
 
-    // 阴影相机跟随玩家
-    sun.target.position.copy(player.mesh.position);
-    sun.position.copy(sun.target.position).addScaledVector(sky.mat.uniforms.sunDir.value, 110);
+    // 灯跟着玩家走：阴影相机 + 太阳按「玩家脚下的当地地平」定向
+    alignLightsToPlayer();
     sun.shadow.needsUpdate = (loop._sf = (loop._sf || 0) + 1) % 2 === 0; // 隔帧重绘阴影(autoUpdate=false)
 
     const target = interact.update(dt, elapsed, player);
@@ -259,9 +300,45 @@ function loop(ticks) {
   }
 }
 
+// ---------- 开发期体检：?audit=1 跑完整地图体检并把 JSON 回传给本地落盘服务 ----------
+async function runAuditReport() {
+  const A = window.__dbg.audit;
+  const planet = window.__dbg.planet;
+  const post = async (name, obj) => {
+    try {
+      await fetch(`http://127.0.0.1:8899/json?name=${name}`, { method: 'POST', body: JSON.stringify(obj) });
+    } catch (e) { console.warn('audit 回传失败', name, e); }
+  };
+  try {
+    const s = A.summary();
+    await post('sites', {
+      checked: s.checked, problems: s.problems, solidsBad: s.solidsBad, by: s.by,
+      list: s.list.map((r) => [r.kind, r.px, r.py, r.float, r.sink, r.sit, r.slope, r.noGround, r.cover, r.solid ? 1 : 0]),
+    });
+    await post('terrain', { ...A.terrain(), ground: { GROUND_R: planet.GROUND_R, ...planet.stats } });
+    await post('reach', A.reach(window.__dbg.spawnPx || [0, 2756], LANDMARKS));
+    await post('town', window.__dbg.townStats);
+    const img = A.heat({ spawnPx: window.__dbg.spawnPx || [0, 2756], landmarks: LANDMARKS });
+    await fetch('http://127.0.0.1:8899/?name=heat', { method: 'POST', body: img });
+    console.log('[audit] done');
+  } catch (e) {
+    await post('audit-error', { err: (e && e.stack) || String(e) });
+  }
+}
+
 // ---------- 输入 ----------
-addEventListener('keydown', e => { if (window.__dbg.player) window.__dbg.player.keys[e.code] = true; });
+addEventListener('keydown', e => {
+  const p = window.__dbg.player;
+  if (!p) return;
+  // 长按跳跃键的系统重复不重启跳：连跳需重新按键（松手再按）
+  if (e.repeat && (e.code === 'Space' || e.code === 'KeyK')) return;
+  p.keys[e.code] = true;
+});
 addEventListener('keyup', e => { if (window.__dbg.player) window.__dbg.player.keys[e.code] = false; });
+// 窗口失焦/切后台时清空按键：切屏时 keyup 会丢，卡住的 A/← 会把 D 抵消成"按了没反应"
+function clearKeys() { if (window.__dbg.player) window.__dbg.player.keys = {}; }
+addEventListener('blur', clearKeys);
+document.addEventListener('visibilitychange', () => { if (document.hidden) clearKeys(); });
 
 // 拖动转头（鼠标/触摸）
 let dragging = false, lastX = 0, lastY = 0;
@@ -321,6 +398,6 @@ boot().catch(e => {
   // 启动失败直接显示在加载页上,不再无声卡死
   const el = document.getElementById('loading');
   el.classList.remove('off');
-  el.textContent = '启动失败: ' + ((e && e.message) || e);
+  el.textContent = '启动失败: ' + ((e && (e.stack || e.message)) || e);
   console.error(e);
 });
