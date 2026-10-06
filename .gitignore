@@ -4,3 +4,10 @@ dist/
 .commandcode/
 .DS_Store
 Thumbs.db
+
+# 本轮的临时草稿目录（复算/探针用，不进版本库）
+.scratch-maa/
+variant-z/.scratch/
+
+# 截图证据：整目录默认不入库，只有 docs 里点名的几张用 git add -f 显式带上
+variant-z/shots/audit/
