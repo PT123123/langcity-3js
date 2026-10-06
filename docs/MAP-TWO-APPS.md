@@ -291,9 +291,13 @@ beachfoam_vfx/waterfall*_vfx/smoke-1/birds_2`）在 `GLTFLoader` 下报
 ### 第三方二进制的推送范围
 
 `reference/messenger-art-assets/INVENTORY.md` 自己记着上游声明「reference 资产不可在未经许可下再分发」。
-本仓库 `origin` 是 `github.com:PT123123/langcity-3js`，且 **`origin/main` 已经包含 112 个同源 GLB**
-（Initial commit 就推上去了）。本轮新增的这批先只留在工作区，**没有提交、没有推送**；
-要不要入库/要不要把已有的那批撤下来，需要用户拍板。
+本仓库 `origin/main` **早已包含 112 个同源 GLB**（Initial commit 就推上去了），所以这条约束在
+仓库公开的那一刻就已经被打破了 —— 本轮不再假装它成立，只把**扩大暴露面**的动作停下来：
+
+- 已推：`variant-z/public/planet/` 的 14 个原版 GLB（6.2MB，`?island=raw|intro` 运行要用）+
+  文档点名的 15 张证据截图（14MB，`git add -f`）。`shots/audit/` 其余 ~120MB 已在 `.gitignore` 里。
+- 未推：`reference/`（8.9MB，原版 Godot 工程与 messenger 包的对档副本）。它不是运行依赖，
+  要推需要用户拍板（见 §7）。撤下 `origin/main` 上已有的那 112 个要改写公开历史，同样等用户点头。
 
 ---
 
