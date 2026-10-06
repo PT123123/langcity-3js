@@ -90,6 +90,9 @@ hud.updateCount(vocab.count());
 const followCam = new FollowCamera(camera, cat);
 const interact = new Interact(scene, cat, town);
 
+// 开发期钩子：和 variant-z 的 window.__dbg 同一套口径，方便两个版本用同一个截图/量测脚本对比
+window.__dbg = { THREE, scene, camera, renderer, planet, town, cat, interact, hud, followCam };
+
 let todIdx = saved?.tod ?? DEFAULT_PHASE;
 let phaseSnap = { ...PHASES[todIdx] };
 let phaseTarget = todIdx;

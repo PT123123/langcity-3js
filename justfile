@@ -7,25 +7,30 @@ set windows-shell := ["cmd.exe", "/C"]
 default:
     @just --list
 
-# 在电脑上跑主项目（开发模式；--host 让同一 WiFi 下的手机也能打开调试）
+# 跑游戏 = variant-z（原版地图资产版），http://localhost:5173
 run:
-    npm run dev -- --host
-
-# 在电脑上跑 variant-z（原版地图资产版）
-run-z:
     cd variant-z && npm run dev -- --host
 
-# 构建主项目生产包（dist/）
-build:
-    npm run build
+# 跑「纯程序化城市」那套（仓库根目录 src/，手写路网，不依赖 GLB），http://localhost:5174
+run-city:
+    npm run dev -- --host
 
-# 构建 variant-z 生产包（variant-z/dist/）
-build-z:
+# 装两套依赖（根目录 + variant-z）
+setup:
+    npm install
+    cd variant-z && npm install
+
+# 构建生产包（variant-z/dist/）
+build:
     cd variant-z && npm run build
 
-# 预览主项目生产包
+# 构建城市版生产包（dist/）
+build-city:
+    npm run build
+
+# 预览生产包
 preview:
-    npm run preview
+    cd variant-z && npm run preview
 
 # 安装到安卓（占位：接入 Capacitor 后把下面步骤换成真实命令）
 install:
