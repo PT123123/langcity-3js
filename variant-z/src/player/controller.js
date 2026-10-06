@@ -2,10 +2,12 @@
 // 第三人称软跟随相机（轻微俯视散步镜头）
 // 攀爬：跳向建筑/树干墙面 → 贴墙竖直攀爬（W 上 / S 下 / 空格蹬墙跳 / 到顶自动跃下）
 import * as THREE from 'three';
-import { R, clampWalk, pxFromDir, dirFromPx } from '../world/planetMap.js';
+import { R, clampWalk, pxFromDir, dirFromPx, eastAt, northAt } from '../world/planetMap.js';
 import { buildCat } from './cat.js';
 
 const WALK = 2.3, RUN = 4.0, TURN = 2.6, JUMP_V = 3.6, G = 9.5;
+const AIR_JUMP_V = 3.2;   // 连跳（空中段）初速：略弱于首跳
+const MAX_JUMPS = 2;      // 关闭无限连跳时，落地前最多起跳段数（2 = 二段跳）
 const CLIMB_V = 1.35, WALL_PAD = 0.16, CLIMB_CD = 0.45;
 
 export class Player {
@@ -21,6 +23,8 @@ export class Player {
     this.lon = THREE.MathUtils.radToDeg(Math.atan2(this.normal.z, this.normal.x));
     this.heading = this._eastAtSpawn();
     this.alt = 0; this.vAlt = 0;
+    this.jumps = 0;          // 本次滞空已用跳跃段数（落地清零）
+    this.infiniteJumps = false; // 无限连跳开关（设置面板控制）：开启后空中可反复起跳
     this.speed01 = 0;
     this.keys = {};
     this.joy = { x: 0, y: 0 };
@@ -100,7 +104,7 @@ export class Player {
     let fwdIn = (k['KeyW'] || k['ArrowUp'] ? 1 : 0) - (k['KeyS'] || k['ArrowDown'] ? 1 : 0);
     let turnIn = (k['KeyA'] || k['ArrowLeft'] ? 1 : 0) - (k['KeyD'] || k['ArrowRight'] ? 1 : 0);
     fwdIn += this.joy.y;
-    turnIn += this.joy.x;
+    turnIn -= this.joy.x; // 摇杆推右(joy.x>0)=右转：turnIn 正=左转，故取负
     this._climbCd = Math.max(0, this._climbCd - dt);
 
     if (this.climbing) {
@@ -142,13 +146,15 @@ export class Player {
     }
     if (grabbed) {
       k['Space'] = false; k['KeyK'] = false;
-    } else if (grounded && wantJump) {
-      this.vAlt = JUMP_V;
+    } else if (wantJump && (grounded || this.infiniteJumps || this.jumps < MAX_JUMPS)) {
+      // 地面起跳 + 空中连跳：开启无限连跳时不限段数，否则落地前最多 MAX_JUMPS 段
+      this.vAlt = grounded ? JUMP_V : AIR_JUMP_V;
+      this.jumps = grounded ? 1 : this.jumps + 1;
       k['Space'] = false; k['KeyK'] = false;
     }
     this.vAlt -= G * dt;
     this.alt += this.vAlt * dt;
-    if (this.alt < 0) { this.alt = 0; this.vAlt = 0; }
+    if (this.alt < 0) { this.alt = 0; this.vAlt = 0; this.jumps = 0; }
 
     this.mesh.position.copy(this._surfaceWorld());
     this._orient();
@@ -246,6 +252,7 @@ export class Player {
     this.climbing = false;
     this._climbCd = CLIMB_CD;
     this.vAlt = vUp;
+    this.jumps = vUp > 0 ? 1 : 0; // 蹬墙跳算作已用一段，落地前还能接一次连跳
     if (faceAway) {
       this.heading.copy(this._climbD);
       this.heading.addScaledVector(this.normal, -this.heading.dot(this.normal)).normalize();
@@ -363,5 +370,50 @@ export class Player {
       this.heading.set(s.hx, s.hy, s.hz).normalize();
       this.heading.addScaledVector(this.normal, -this.heading.dot(this.normal)).normalize();
     }
+  }
+
+  /** 传送到地图像素落点：朝向保持切向投影，相机直接就位（软跟随跨半个星球会甩镜头） */
+  teleportTo(px, py) {
+    this.climbing = false;
+    this._wallC = null;
+    const d = this._findDropSpot(dirFromPx(px, py).normalize());
+    this._setFromDir(d);
+    this.heading.addScaledVector(this.normal, -this.heading.dot(this.normal));
+    if (this.heading.lengthSq() < 1e-6) this.heading.copy(this._eastAtSpawn());
+    this.heading.normalize();
+    this.alt = 0; this.vAlt = 0;
+    this.jumps = 0;
+    this.mesh.position.copy(this.normal).multiplyScalar(this._groundRadius());
+    this._orient();
+    this.camPos.copy(this.mesh.position)
+      .addScaledVector(this.normal, 2.4)
+      .addScaledVector(this.heading, -2.8);
+    this.camAim.copy(this.mesh.position).addScaledVector(this.normal, 0.45);
+  }
+
+  /** 落点被建筑碰撞圈/海面/软墙占住时，在切平面 8 方向由近及远找空位 */
+  _findDropSpot(d0) {
+    const minR = (this.waterRadius || R * 0.995) + 0.3;
+    const free = (d) => {
+      if (clampWalk(d)) return false;
+      if (this._groundRadiusAt(d) < minR) return false;
+      for (const c of this.colliders) {
+        if (Math.acos(THREE.MathUtils.clamp(d.dot(c.n), -1, 1)) * R < c.r + 0.5) return false;
+      }
+      return true;
+    };
+    if (free(d0)) return d0;
+    const e = eastAt(d0), n = northAt(d0);
+    for (const dist of [3.2, 4.6, 6.2]) {
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2 + 0.4;
+        const cand = d0.clone()
+          .addScaledVector(e, Math.cos(a) * dist / R)
+          .addScaledVector(n, Math.sin(a) * dist / R)
+          .normalize();
+        if (free(cand)) return cand;
+      }
+    }
+    return d0; // 实在没空位就原点落，碰撞推挤会兜底
   }
 }

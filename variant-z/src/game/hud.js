@@ -32,7 +32,7 @@ export function speak(text) {
 }
 
 export class Hud {
-  constructor({ onShoot, onPhase }) {
+  constructor({ onShoot, onPhase, onInfiniteJump }) {
     this.card = document.getElementById('word-card');
     this.el = {
       cat: document.getElementById('card-category'),
@@ -54,6 +54,22 @@ export class Hud {
     this.el.speak.addEventListener('click', () => this.current && speak(this.current.kana || this.current.ja));
     document.getElementById('vocab-btn').addEventListener('click', () => this.openVocab());
     document.getElementById('vocab-close').addEventListener('click', () => this.drawer.classList.add('hidden'));
+
+    // 设置面板：无限连跳开关（持久化到 localStorage）
+    this.settingsPanel = document.getElementById('settings');
+    this.infiniteToggle = document.getElementById('toggle-infinite-jump');
+    this.onInfiniteJump = onInfiniteJump;
+    const savedInfinite = localStorage.getItem('langcity3jz_infinitejump') === '1';
+    this.infiniteToggle.checked = savedInfinite;
+    if (onInfiniteJump) onInfiniteJump(savedInfinite);
+    this.infiniteToggle.addEventListener('change', () => {
+      const on = this.infiniteToggle.checked;
+      localStorage.setItem('langcity3jz_infinitejump', on ? '1' : '0');
+      if (this.onInfiniteJump) this.onInfiniteJump(on);
+    });
+    document.getElementById('settings-btn').addEventListener('click', () => this.settingsPanel.classList.toggle('hidden'));
+    document.getElementById('settings-close').addEventListener('click', () => this.settingsPanel.classList.add('hidden'));
+
     document.querySelectorAll('#time-switch button').forEach(b => {
       b.addEventListener('click', () => {
         document.querySelectorAll('#time-switch button').forEach(x => x.classList.remove('active'));
@@ -63,7 +79,7 @@ export class Hud {
     });
     window.addEventListener('keydown', (e) => {
       if (e.code === 'KeyF') onShoot();
-      if (e.code === 'Escape') { this.closeCard(); this.drawer.classList.add('hidden'); }
+      if (e.code === 'Escape') { this.closeCard(); this.drawer.classList.add('hidden'); this.settingsPanel.classList.add('hidden'); }
     });
     this.refreshChip();
   }
