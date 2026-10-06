@@ -1,0 +1,6 @@
+node_modules/
+dist/
+*.log
+.commandcode/
+.DS_Store
+Thumbs.db

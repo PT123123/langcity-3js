@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>日语星 ・ LangCity 3JS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="scene"></canvas>
+    <div id="ui-layer">
+      <div id="crosshair"></div>
+      <div id="hud-top">
+        <div id="discovered-chip">已发现 0</div>
+        <div id="time-switch">
+          <button data-phase="morning" title="晨">晨</button>
+          <button data-phase="day" title="昼">昼</button>
+          <button data-phase="dusk" class="active" title="暮">暮</button>
+          <button data-phase="night" title="夜">夜</button>
+        </div>
+        <button id="bgm-btn" title="关闭音乐">♪</button>
+        <button id="vocab-btn" title="词汇本">词汇本</button>
+      </div>
+      <div id="hint">WASD 行走 ・ Shift 奔跑 ・ 拖动 转视角 ・ 空格 跳跃 / 跳向墙面攀爬（W/S 上下）・ <b>F / 拍照键</b> 拍照</div>
+      <button id="photo-btn"><span>📷</span><label>拍照</label></button>
+      <div id="touch-joystick"><div id="joy-knob"></div></div>
+    </div>
+    <div id="flash"></div>
+    <div id="word-card" class="hidden">
+      <div id="card-category"></div>
+      <button id="card-close">✕</button>
+      <div id="card-new" class="hidden">新单词</div>
+      <div id="card-ja"></div>
+      <div id="card-kana"></div>
+      <div id="card-romaji"></div>
+      <div id="card-zh"></div>
+      <button id="card-speak">🔊 发音</button>
+    </div>
+    <div id="vocab-drawer" class="hidden">
+      <div id="vocab-head">
+        <h2>词汇本</h2>
+        <button id="vocab-close">✕</button>
+      </div>
+      <div id="vocab-progress"></div>
+      <div id="vocab-list"></div>
+    </div>
+    <div id="loading">正在前往日语星…</div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

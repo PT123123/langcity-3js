@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LangCity 3JS — Messenger 风格实验页</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #1a1c24; }
+    #scene { width: 100%; height: 100%; display: block; }
+    #loading {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: #f2ead8; font: 500 15px/1.6 system-ui, sans-serif; background: #1a1c24; z-index: 10;
+      transition: opacity .5s;
+    }
+    #loading.off { opacity: 0; pointer-events: none; }
+    #hud {
+      position: fixed; left: 12px; top: 12px; z-index: 5; color: #f2ead8;
+      font: 500 12px/1.7 ui-monospace, monospace; text-shadow: 0 1px 2px rgba(0,0,0,.6);
+      pointer-events: none; white-space: pre;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div id="loading">Messenger 风格实验页加载中…</div>
+  <div id="hud"></div>
+  <script>
+    // 调试钩子:three 的 shader 编译错误只走 console.error,这里留档给无头验证读
+    window.__cerr = [];
+    const _ce = console.error.bind(console);
+    console.error = (...a) => {
+      window.__cerr.push(a.map(x => String((x && x.message) || x).slice(0, 400)).join(' | '));
+      if (window.__cerr.length > 40) window.__cerr.shift();
+      _ce(...a);
+    };
+  </script>
+  <script type="module" src="./src/lab.js"></script>
+</body>
+</html>

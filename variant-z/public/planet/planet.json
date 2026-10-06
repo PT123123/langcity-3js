@@ -1,0 +1,1538 @@
+{
+	"objects": [
+		{
+			"kind": "station",
+			"word": "station",
+			"x": 3154.0,
+			"y": 619.0
+		},
+		{
+			"kind": "konbini",
+			"word": "konbini",
+			"x": 0.0,
+			"y": 2274.0
+		},
+		{
+			"kind": "house",
+			"word": "house",
+			"x": 645.0,
+			"y": 542.0
+		},
+		{
+			"kind": "mansion",
+			"word": "mansion",
+			"x": 5200.0,
+			"y": 2783.0
+		},
+		{
+			"kind": "mansion",
+			"word": "mansion",
+			"x": 4934.0,
+			"y": 1288.0
+		},
+		{
+			"kind": "super",
+			"word": "supermarket",
+			"x": 3754.0,
+			"y": 2848.0
+		},
+		{
+			"kind": "cafe",
+			"word": "cafe",
+			"x": 4518.0,
+			"y": 503.0
+		},
+		{
+			"kind": "house",
+			"word": "house",
+			"x": 4255.0,
+			"y": 2477.0
+		},
+		{
+			"kind": "house",
+			"word": "house",
+			"x": 4273.0,
+			"y": 4000.0
+		},
+		{
+			"kind": "ramen",
+			"word": "ramen_shop",
+			"x": 313.0,
+			"y": 814.0
+		},
+		{
+			"kind": "post_office",
+			"word": "post_office",
+			"x": 4915.0,
+			"y": 4000.0
+		},
+		{
+			"kind": "house",
+			"word": "house",
+			"x": 5200.0,
+			"y": 3388.0
+		},
+		{
+			"kind": "house",
+			"word": "house",
+			"x": 5200.0,
+			"y": 434.0
+		},
+		{
+			"kind": "house",
+			"word": "house",
+			"x": 4654.0,
+			"y": 3685.0
+		},
+		{
+			"kind": "house",
+			"word": "house",
+			"x": 1281.0,
+			"y": 881.0
+		},
+		{
+			"kind": "mansion",
+			"word": "mansion",
+			"x": 5200,
+			"y": 1189
+		},
+		{
+			"kind": "house",
+			"word": "house",
+			"x": 5091.0,
+			"y": 4000.0
+		},
+		{
+			"kind": "house",
+			"word": "house",
+			"x": 3206.0,
+			"y": 3846.0
+		},
+		{
+			"host": "house",
+			"kind": "door",
+			"word": "door",
+			"x": 642.0,
+			"y": 540.0
+		},
+		{
+			"host": "konbini",
+			"kind": "door",
+			"word": "door",
+			"x": 0.0,
+			"y": 2275.0
+		},
+		{
+			"host": "mansion",
+			"kind": "door",
+			"word": "door",
+			"x": 5200.0,
+			"y": 2779.0
+		},
+		{
+			"dx": -1.1,
+			"host": "house",
+			"kind": "window",
+			"word": "window",
+			"x": 602.0,
+			"y": 540.0
+		},
+		{
+			"dx": 1.1,
+			"host": "house",
+			"kind": "window",
+			"word": "window",
+			"x": 1278.0,
+			"y": 880.0
+		},
+		{
+			"kind": "pole",
+			"word": "pole",
+			"x": 600.0,
+			"y": 1015.0
+		},
+		{
+			"kind": "pole",
+			"word": "pole",
+			"x": 3906.0,
+			"y": 750.0
+		},
+		{
+			"kind": "pole",
+			"word": "pole",
+			"x": 2469.0,
+			"y": 1218.0
+		},
+		{
+			"kind": "pole",
+			"word": "pole",
+			"x": 898.0,
+			"y": 1974.0
+		},
+		{
+			"kind": "pole",
+			"word": "pole",
+			"x": 3181.0,
+			"y": 1708.0
+		},
+		{
+			"kind": "streetlight",
+			"word": "streetlight",
+			"x": 981.0,
+			"y": 926.0
+		},
+		{
+			"kind": "streetlight",
+			"word": "streetlight",
+			"x": 1801.0,
+			"y": 886.0
+		},
+		{
+			"kind": "streetlight",
+			"word": "streetlight",
+			"x": 2769.0,
+			"y": 1363.0
+		},
+		{
+			"kind": "streetlight",
+			"word": "streetlight",
+			"x": 939.0,
+			"y": 1528.0
+		},
+		{
+			"kind": "streetlight",
+			"word": "streetlight",
+			"x": 3075.0,
+			"y": 1616.0
+		},
+		{
+			"kind": "vending",
+			"word": "vending",
+			"x": 640.0,
+			"y": 785.0
+		},
+		{
+			"kind": "vending",
+			"word": "vending",
+			"x": 2302.0,
+			"y": 1153.0
+		},
+		{
+			"flip": true,
+			"kind": "vending",
+			"word": "vending",
+			"x": 2330.0,
+			"y": 1020.0
+		},
+		{
+			"kind": "vending",
+			"word": "vending",
+			"x": 3119.0,
+			"y": 1291.0
+		},
+		{
+			"kind": "cans",
+			"word": "drink",
+			"x": 2465.0,
+			"y": 1025.0
+		},
+		{
+			"kind": "trash",
+			"word": "trash",
+			"x": 2540.0,
+			"y": 1020.0
+		},
+		{
+			"kind": "trash",
+			"word": "trash",
+			"x": 710.0,
+			"y": 790.0
+		},
+		{
+			"kind": "trash",
+			"word": "trash",
+			"x": 3195.0,
+			"y": 3214.0
+		},
+		{
+			"kind": "mailbox",
+			"word": "mailbox",
+			"x": 808.0,
+			"y": 2090.0
+		},
+		{
+			"kind": "mailbox",
+			"word": "mailbox",
+			"x": 2300.0,
+			"y": 455.0
+		},
+		{
+			"kind": "signboard",
+			"word": "signboard",
+			"x": 600.0,
+			"y": 1836.0
+		},
+		{
+			"kind": "signboard",
+			"word": "signboard",
+			"x": 2380.0,
+			"y": 742.0
+		},
+		{
+			"kind": "signboard",
+			"word": "signboard",
+			"x": 1971.0,
+			"y": 722.0
+		},
+		{
+			"kind": "roadsign",
+			"word": "roadsign",
+			"x": 2600.0,
+			"y": 1005.0
+		},
+		{
+			"kind": "roadsign",
+			"word": "roadsign",
+			"x": 814.0,
+			"y": 2255.0
+		},
+		{
+			"kind": "bench",
+			"word": "bench",
+			"x": 3212.0,
+			"y": 1742.0
+		},
+		{
+			"kind": "bench",
+			"word": "bench",
+			"x": 3494.0,
+			"y": 1713.0
+		},
+		{
+			"kind": "bench",
+			"word": "bench",
+			"x": 1355.0,
+			"y": 1162.0
+		},
+		{
+			"kind": "busstop",
+			"word": "busstop",
+			"x": 1321.0,
+			"y": 1179.0
+		},
+		{
+			"flip": true,
+			"kind": "car",
+			"word": "car",
+			"x": 700.0,
+			"y": 1115.0
+		},
+		{
+			"kind": "car",
+			"word": "car",
+			"x": 2527.0,
+			"y": 1026.0
+		},
+		{
+			"flip": true,
+			"kind": "car",
+			"word": "car",
+			"x": 1950.0,
+			"y": 3313.0
+		},
+		{
+			"kind": "car",
+			"word": "car",
+			"x": 3350.0,
+			"y": 2890.0
+		},
+		{
+			"kind": "bicycle",
+			"word": "bicycle",
+			"x": 1470.0,
+			"y": 480.0
+		},
+		{
+			"kind": "bicycle",
+			"word": "bicycle",
+			"x": 1540.0,
+			"y": 480.0
+		},
+		{
+			"kind": "bicycle",
+			"word": "bicycle",
+			"x": 1740.0,
+			"y": 960.0
+		},
+		{
+			"kind": "tree",
+			"word": "tree",
+			"x": 150.0,
+			"y": 350.0
+		},
+		{
+			"kind": "tree",
+			"word": "tree",
+			"x": 1820.0,
+			"y": 585.0
+		},
+		{
+			"kind": "tree",
+			"word": "tree",
+			"x": 3150.0,
+			"y": 320.0
+		},
+		{
+			"kind": "tree",
+			"word": "tree",
+			"x": 2014.0,
+			"y": 3105.0
+		},
+		{
+			"kind": "tree",
+			"word": "tree",
+			"x": 3450.0,
+			"y": 1560.0
+		},
+		{
+			"kind": "tree",
+			"word": "tree",
+			"x": 3629.0,
+			"y": 1542.0
+		},
+		{
+			"kind": "sakura",
+			"word": "sakura",
+			"x": 1400.0,
+			"y": 440.0
+		},
+		{
+			"kind": "sakura",
+			"word": "sakura",
+			"x": 2736.0,
+			"y": 353.0
+		},
+		{
+			"kind": "sakura",
+			"word": "sakura",
+			"x": 3400.0,
+			"y": 1700.0
+		},
+		{
+			"kind": "sakura",
+			"word": "sakura",
+			"x": 3293.0,
+			"y": 2848.0
+		},
+		{
+			"kind": "flower",
+			"word": "flower",
+			"x": 340.0,
+			"y": 800.0
+		},
+		{
+			"kind": "flower",
+			"word": "flower",
+			"x": 3636.0,
+			"y": 1541.0
+		},
+		{
+			"kind": "flower",
+			"word": "flower",
+			"x": 244.0,
+			"y": 2269.0
+		},
+		{
+			"kind": "grass",
+			"word": "grass",
+			"x": 3197.0,
+			"y": 1749.0
+		},
+		{
+			"kind": "grass",
+			"word": "grass",
+			"x": 3341.0,
+			"y": 2860.0
+		},
+		{
+			"kind": "parksign",
+			"word": "park",
+			"x": 3014.0,
+			"y": 1431.0
+		},
+		{
+			"kind": "dog",
+			"word": "dog",
+			"x": 900.0,
+			"y": 545.0
+		},
+		{
+			"flip": true,
+			"kind": "cat",
+			"word": "cat",
+			"x": 450.0,
+			"y": 1690.0
+		},
+		{
+			"kind": "bird",
+			"word": "bird",
+			"x": 3332.0,
+			"y": 1822.0
+		},
+		{
+			"kind": "bird",
+			"word": "bird",
+			"x": 3544.0,
+			"y": 1612.0
+		},
+		{
+			"kind": "bowl",
+			"word": "ramen",
+			"x": 420.0,
+			"y": 1968.0
+		},
+		{
+			"kind": "onigiri",
+			"word": "onigiri",
+			"x": 515.0,
+			"y": 795.0
+		},
+		{
+			"kind": "bread",
+			"word": "bread",
+			"x": 1839.0,
+			"y": 654.0
+		},
+		{
+			"kind": "pipe",
+			"word": "",
+			"x": 1365.0,
+			"y": 1144.0
+		},
+		{
+			"kind": "crate",
+			"word": "",
+			"x": 1309.0,
+			"y": 1306.0
+		},
+		{
+			"kind": "planter",
+			"word": "",
+			"x": 1903.0,
+			"y": 1145.0
+		},
+		{
+			"kind": "lowwall",
+			"word": "",
+			"x": 1932.0,
+			"y": 1147.0
+		},
+		{
+			"kind": "pipe",
+			"word": "",
+			"x": 2425.0,
+			"y": 1105.0
+		},
+		{
+			"kind": "crate",
+			"word": "",
+			"x": 3193.0,
+			"y": 1151.0
+		},
+		{
+			"kind": "planter",
+			"word": "",
+			"x": 3200.0,
+			"y": 1320.0
+		},
+		{
+			"kind": "lowwall",
+			"word": "",
+			"x": 3198.0,
+			"y": 1723.0
+		},
+		{
+			"kind": "pipe",
+			"word": "",
+			"x": 3274.0,
+			"y": 2882.0
+		},
+		{
+			"kind": "crate",
+			"word": "",
+			"x": 3346.0,
+			"y": 1799.0
+		},
+		{
+			"kind": "planter",
+			"word": "",
+			"x": 3390.0,
+			"y": 1741.0
+		},
+		{
+			"kind": "lowwall",
+			"word": "",
+			"x": 1424.0,
+			"y": 3724.0
+		},
+		{
+			"kind": "planter",
+			"word": "",
+			"x": 2055.0,
+			"y": 3250.0
+		},
+		{
+			"kind": "pipe",
+			"word": "",
+			"x": 763.0,
+			"y": 1510.0
+		},
+		{
+			"kind": "crate",
+			"word": "",
+			"x": 935.0,
+			"y": 1866.0
+		},
+		{
+			"kind": "furniture",
+			"word": "kagu",
+			"x": 3406.0,
+			"y": 3195.0
+		},
+		{
+			"kind": "table",
+			"word": "table",
+			"x": 2041.0,
+			"y": 896.0
+		},
+		{
+			"kind": "chair",
+			"word": "chair",
+			"x": 2047.0,
+			"y": 867.0
+		},
+		{
+			"kind": "chair",
+			"word": "chair",
+			"x": 2128.0,
+			"y": 711.0
+		},
+		{
+			"kind": "table",
+			"word": "table",
+			"x": 3470.0,
+			"y": 3510.0
+		},
+		{
+			"kind": "chair",
+			"word": "chair",
+			"x": 3423.0,
+			"y": 3415.0
+		},
+		{
+			"kind": "chair",
+			"word": "chair",
+			"x": 3637.0,
+			"y": 4000.0
+		},
+		{
+			"kind": "sofa",
+			"word": "sofa",
+			"x": 3670.0,
+			"y": 3886.0
+		},
+		{
+			"kind": "shelf",
+			"word": "shelf",
+			"x": 3945.0,
+			"y": 3534.0
+		},
+		{
+			"kind": "tv",
+			"word": "tv",
+			"x": 3965.0,
+			"y": 3515.0
+		},
+		{
+			"kind": "lamp",
+			"word": "lamp",
+			"x": 3348.0,
+			"y": 3429.0
+		},
+		{
+			"kind": "bed",
+			"word": "bed",
+			"x": 3135.0,
+			"y": 3673.0
+		},
+		{
+			"kind": "wash",
+			"word": "wash",
+			"x": 2074.0,
+			"y": 3190.0
+		},
+		{
+			"kind": "wash",
+			"word": "wash",
+			"x": 212.0,
+			"y": 3225.0
+		},
+		{
+			"kind": "bench",
+			"word": "bench",
+			"x": 4020.0,
+			"y": 700.0
+		},
+		{
+			"kind": "pole",
+			"word": "pole",
+			"x": 3987.0,
+			"y": 3192.0
+		},
+		{
+			"kind": "streetlight",
+			"word": "streetlight",
+			"x": 4410.0,
+			"y": 2550.0
+		},
+		{
+			"kind": "vending",
+			"word": "vending",
+			"x": 4336.0,
+			"y": 1905.0
+		},
+		{
+			"kind": "trash",
+			"word": "trash",
+			"x": 4380.0,
+			"y": 2050.0
+		},
+		{
+			"kind": "bicycle",
+			"word": "bicycle",
+			"x": 4387.0,
+			"y": 1981.0
+		},
+		{
+			"kind": "mailbox",
+			"word": "mailbox",
+			"x": 4390.0,
+			"y": 3200.0
+		},
+		{
+			"kind": "mansion",
+			"word": "mansion",
+			"x": 986,
+			"y": 538
+		},
+		{
+			"kind": "house",
+			"word": "house",
+			"x": 804.0,
+			"y": 1092.0
+		},
+		{
+			"kind": "house",
+			"word": "house",
+			"x": 4277.0,
+			"y": 2955.0
+		},
+		{
+			"kind": "house",
+			"word": "house",
+			"x": 5059.0,
+			"y": 3216.0
+		},
+		{
+			"kind": "tree",
+			"word": "tree",
+			"x": 5157.0,
+			"y": 1810.0
+		},
+		{
+			"kind": "tree",
+			"word": "tree",
+			"x": 4500.0,
+			"y": 2900.0
+		},
+		{
+			"kind": "tree",
+			"word": "tree",
+			"x": 4200.0,
+			"y": 3200.0
+		},
+		{
+			"kind": "sakura",
+			"word": "sakura",
+			"x": 5050.0,
+			"y": 800.0
+		},
+		{
+			"kind": "grass",
+			"word": "grass",
+			"x": 5013.0,
+			"y": 2120.0
+		},
+		{
+			"kind": "planter",
+			"word": "planter",
+			"x": 4550.0,
+			"y": 2350.0
+		},
+		{
+			"kind": "lowwall",
+			"word": "lowwall",
+			"x": 4700.0,
+			"y": 2450.0
+		},
+		{
+			"kind": "dog",
+			"word": "dog",
+			"x": 4851.0,
+			"y": 2159.0
+		},
+		{
+			"kind": "cat",
+			"word": "cat",
+			"x": 4150.0,
+			"y": 3850.0
+		},
+		{
+			"kind": "tires",
+			"x": 3216.0,
+			"y": 353.0
+		},
+		{
+			"kind": "cones",
+			"x": 1233.0,
+			"y": 3333.0
+		},
+		{
+			"kind": "fireplug",
+			"x": 4340.0,
+			"y": 640.0
+		},
+		{
+			"kind": "fireplug",
+			"x": 4340.0,
+			"y": 2560.0
+		},
+		{
+			"kind": "laundry",
+			"rot": 90.0,
+			"x": 2300.0,
+			"y": 920.0
+		},
+		{
+			"kind": "fireplug",
+			"x": 1127.0,
+			"y": 473.0
+		},
+		{
+			"kind": "flower",
+			"x": 3114.0,
+			"y": 1322.0
+		},
+		{
+			"kind": "tires",
+			"x": 590.0,
+			"y": 2189.0
+		},
+		{
+			"kind": "flower",
+			"x": 3647.0,
+			"y": 1453.0
+		},
+		{
+			"kind": "fireplug",
+			"x": 229.0,
+			"y": 2722.0
+		},
+		{
+			"kind": "flower",
+			"x": 3706.0,
+			"y": 1182.0
+		},
+		{
+			"kind": "potplant",
+			"x": 4660.0,
+			"y": 2960.0
+		},
+		{
+			"kind": "tires",
+			"x": 2765.0,
+			"y": 1401.0
+		},
+		{
+			"kind": "potplant",
+			"x": 2049.0,
+			"y": 3278.0
+		},
+		{
+			"kind": "cones",
+			"rot": 90.0,
+			"x": 2700.0,
+			"y": 1200.0
+		},
+		{
+			"kind": "potplant",
+			"x": 1256.0,
+			"y": 3397.0
+		},
+		{
+			"kind": "trashbags",
+			"x": 4820.0,
+			"y": 3440.0
+		},
+		{
+			"kind": "flower",
+			"x": 3673.0,
+			"y": 1482.0
+		},
+		{
+			"kind": "potplant",
+			"x": 3971.0,
+			"y": 3246.0
+		},
+		{
+			"kind": "gasbottle",
+			"x": 700.0,
+			"y": 2000.0
+		},
+		{
+			"kind": "potplant",
+			"x": 1254.0,
+			"y": 3278.0
+		},
+		{
+			"kind": "laundry",
+			"x": 4780.0,
+			"y": 1800.0
+		},
+		{
+			"kind": "potplant",
+			"x": 2683.0,
+			"y": 1336.0
+		},
+		{
+			"kind": "laundry",
+			"x": 1928.0,
+			"y": 3252.0
+		},
+		{
+			"kind": "cones",
+			"x": 3523.0,
+			"y": 951.0
+		},
+		{
+			"kind": "laundry",
+			"rot": 90.0,
+			"x": 5038.0,
+			"y": 592.0
+		},
+		{
+			"kind": "flower",
+			"x": 3289.0,
+			"y": 2761.0
+		},
+		{
+			"kind": "flower",
+			"x": 4120.0,
+			"y": 2299.0
+		},
+		{
+			"kind": "potplant",
+			"x": 4055.0,
+			"y": 2901.0
+		},
+		{
+			"kind": "laundry",
+			"x": 186.0,
+			"y": 3185.0
+		},
+		{
+			"kind": "flower",
+			"x": 3599.0,
+			"y": 1473.0
+		},
+		{
+			"kind": "potplant",
+			"x": 3650.0,
+			"y": 1231.0
+		},
+		{
+			"kind": "grass",
+			"x": 3307.0,
+			"y": 1699.0
+		},
+		{
+			"kind": "potplant",
+			"x": 820.0,
+			"y": 1360.0
+		},
+		{
+			"kind": "grass",
+			"x": 3292.0,
+			"y": 1351.0
+		},
+		{
+			"kind": "grass",
+			"x": 4085.0,
+			"y": 2291.0
+		},
+		{
+			"kind": "potplant",
+			"x": 1340.0,
+			"y": 680.0
+		},
+		{
+			"kind": "trashbags",
+			"x": 1020.0,
+			"y": 840.0
+		},
+		{
+			"kind": "trashbags",
+			"x": 2000.0,
+			"y": 3085.0
+		},
+		{
+			"kind": "grass",
+			"x": 3500.0,
+			"y": 1760.0
+		},
+		{
+			"kind": "trashbags",
+			"x": 1578.0,
+			"y": 726.0
+		},
+		{
+			"kind": "trashbags",
+			"x": 4660.0,
+			"y": 520.0
+		},
+		{
+			"kind": "grass",
+			"x": 3112.0,
+			"y": 1682.0
+		},
+		{
+			"kind": "tree",
+			"x": 3358.0,
+			"y": 1750.0
+		},
+		{
+			"kind": "tree",
+			"x": 3712.0,
+			"y": 1459.0
+		},
+		{
+			"kind": "gasbottle",
+			"x": 3947.0,
+			"y": 3491.0
+		},
+		{
+			"kind": "tree",
+			"x": 3721.0,
+			"y": 2564.0
+		},
+		{
+			"kind": "sakura",
+			"x": 3260.0,
+			"y": 1600.0
+		},
+		{
+			"kind": "sakura",
+			"x": 3329.0,
+			"y": 2842.0
+		},
+		{
+			"kind": "sakura",
+			"x": 3557.0,
+			"y": 1581.0
+		},
+		{
+			"kind": "gasbottle",
+			"x": 3454.0,
+			"y": 3415.0
+		},
+		{
+			"kind": "npc",
+			"npc": "chef",
+			"x": 563.0,
+			"y": 1450.0
+		},
+		{
+			"kind": "npc",
+			"npc": "musician",
+			"x": 3140.0,
+			"y": 1680.0
+		},
+		{
+			"kind": "npc",
+			"npc": "office-worker",
+			"x": 2056.0,
+			"y": 764.0
+		},
+		{
+			"kind": "npc",
+			"npc": "young-lady",
+			"x": 2486.0,
+			"y": 629.0
+		},
+		{
+			"kind": "npc",
+			"npc": "oldwoman",
+			"x": 814.0,
+			"y": 1994.0
+		},
+		{
+			"kind": "npc",
+			"npc": "scout",
+			"x": 2983.0,
+			"y": 1409.0
+		},
+		{
+			"kind": "npc",
+			"npc": "diver",
+			"x": 2487.0,
+			"y": 451.0
+		},
+		{
+			"kind": "npc",
+			"npc": "mountainman",
+			"x": 1406.0,
+			"y": 516.0
+		},
+		{
+			"kind": "npc",
+			"npc": "boss",
+			"x": 1497.0,
+			"y": 387.0
+		},
+		{
+			"kind": "npc",
+			"npc": "factory-worker-a",
+			"x": 1807.0,
+			"y": 494.0
+		},
+		{
+			"kind": "npc",
+			"npc": "threekid",
+			"x": 3232.0,
+			"y": 1568.0
+		},
+		{
+			"kind": "npc",
+			"npc": "fox",
+			"x": 3248.0,
+			"y": 1778.0
+		},
+		{
+			"kind": "npc",
+			"npc": "caveman",
+			"x": 3049.0,
+			"y": 1651.0
+		},
+		{
+			"kind": "npc",
+			"npc": "female-scientist",
+			"x": 2431.0,
+			"y": 97.0
+		},
+		{
+			"kind": "delivery",
+			"model": "postcard",
+			"x": 833.0,
+			"y": 2110.0
+		},
+		{
+			"h": 0.4,
+			"kind": "delivery",
+			"model": "samplebox",
+			"x": 1744.0,
+			"y": 1018.0
+		},
+		{
+			"h": 0.5,
+			"kind": "delivery",
+			"model": "clothes",
+			"x": 2438.0,
+			"y": 782.0
+		},
+		{
+			"h": 0.42,
+			"kind": "delivery",
+			"model": "offering",
+			"x": 3005.0,
+			"y": 1558.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "temple",
+			"rot": 90.0,
+			"word": "tera",
+			"x": 4140.0,
+			"y": 794.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "school",
+			"rot": 180.0,
+			"word": "gakkou",
+			"x": 3182.0,
+			"y": 3248.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "hospital",
+			"word": "byouin",
+			"x": 3000.0,
+			"y": 99.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "bank",
+			"rot": 270.0,
+			"word": "ginkou",
+			"x": 2636.0,
+			"y": 1292.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "police",
+			"word": "keisatsusho",
+			"x": 4290.0,
+			"y": 370.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "library",
+			"rot": 180.0,
+			"word": "toshokan",
+			"x": 2039.0,
+			"y": 3151.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "truck",
+			"rot": 90.0,
+			"word": "torakku",
+			"x": 2724.0,
+			"y": 656.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "truck",
+			"rot": 270.0,
+			"word": "torakku",
+			"x": 425.0,
+			"y": 1276.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "boat",
+			"rot": 90.0,
+			"word": "fune",
+			"x": 3390.0,
+			"y": 1214.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "boat",
+			"rot": 270.0,
+			"word": "fune",
+			"x": 3577.0,
+			"y": 1612.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "ticket_sign",
+			"rot": 180.0,
+			"word": "kippu",
+			"x": 1380.0,
+			"y": 1111.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "ticket_sign",
+			"rot": 90.0,
+			"word": "kippu",
+			"x": 487.0,
+			"y": 1840.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "ticket_sign",
+			"rot": 270.0,
+			"word": "kippu",
+			"x": 764.0,
+			"y": 1338.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "goods",
+			"rot": 270.0,
+			"word": "mise",
+			"x": 4109.0,
+			"y": 2333.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "goods",
+			"rot": 90.0,
+			"word": "mise",
+			"x": 3363.0,
+			"y": 2892.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "goods",
+			"rot": 90.0,
+			"word": "mise",
+			"x": 3725.0,
+			"y": 2705.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "goods",
+			"rot": 90.0,
+			"word": "mise",
+			"x": 3989.0,
+			"y": 3176.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "goods",
+			"rot": 180.0,
+			"word": "mise",
+			"x": 3410.0,
+			"y": 3202.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "goods",
+			"word": "mise",
+			"x": 3684.0,
+			"y": 3925.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "deer",
+			"rot": 90.0,
+			"word": "yagi",
+			"x": 4612.0,
+			"y": 3311.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "deer",
+			"rot": 90.0,
+			"word": "yagi",
+			"x": 3029.0,
+			"y": 1642.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "fox",
+			"rot": 270.0,
+			"word": "kitsune",
+			"x": 1517.0,
+			"y": 808.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "fox",
+			"rot": 180.0,
+			"word": "kitsune",
+			"x": 4800.0,
+			"y": 2521.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "fox",
+			"rot": 180.0,
+			"word": "kitsune",
+			"x": 1716.0,
+			"y": 462.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "wolf",
+			"word": "ookami",
+			"x": 4109.0,
+			"y": 3730.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "turtle",
+			"rot": 270.0,
+			"word": "kame",
+			"x": 330.0,
+			"y": 2309.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "turtle",
+			"rot": 180.0,
+			"word": "kame",
+			"x": 3425.0,
+			"y": 1835.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"rot": 90.0,
+			"word": "pinku",
+			"x": 924.0,
+			"y": 1674.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"rot": 270.0,
+			"word": "orenji",
+			"x": 2935.0,
+			"y": 1170.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"rot": 180.0,
+			"word": "hiru",
+			"x": 4561.0,
+			"y": 2016.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"rot": 270.0,
+			"word": "san",
+			"x": 1160.0,
+			"y": 1140.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"rot": 90.0,
+			"word": "haiiro",
+			"x": 1050.0,
+			"y": 1616.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"rot": 90.0,
+			"word": "pinku",
+			"x": 1986.0,
+			"y": 776.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"rot": 270.0,
+			"word": "murasaki",
+			"x": 1929.0,
+			"y": 3243.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"rot": 180.0,
+			"word": "kyou",
+			"x": 2407.0,
+			"y": 1138.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"word": "ichi",
+			"x": 533.0,
+			"y": 889.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"word": "san",
+			"x": 2127.0,
+			"y": 703.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"rot": 90.0,
+			"word": "shiro",
+			"x": 879.0,
+			"y": 2046.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"word": "asa",
+			"x": 1156.0,
+			"y": 1240.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"rot": 180.0,
+			"word": "hiru",
+			"x": 2007.0,
+			"y": 902.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"word": "ichi",
+			"x": 2027.0,
+			"y": 927.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"word": "kiiro",
+			"x": 826.0,
+			"y": 1711.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"rot": 270.0,
+			"word": "shiro",
+			"x": 1919.0,
+			"y": 769.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"word": "hiru",
+			"x": 230.0,
+			"y": 1000.0
+		},
+		{
+			"batch": "cc0",
+			"kind": "plate",
+			"rot": 90.0,
+			"word": "ichi",
+			"x": 3477.0,
+			"y": 591.0
+		}
+	],
+	"planet": {
+		"clouds": true,
+		"lat_bottom_deg": 52.0,
+		"lat_top_deg": 10.0,
+		"lon_span_deg": 130.0,
+		"model": "planets_present_intro_planet.glb",
+		"radius": 34.0,
+		"scale": 1.5,
+		"walk_lat_deg": 62.0
+	},
+	"spawn": [
+		0.0,
+		2756.0
+	],
+	"world": [
+		5200.0,
+		4000.0
+	]
+}

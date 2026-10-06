@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>LangCity — 言叶之城</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div id="hint" class="hint hidden"></div>
+    <button id="btn-time" class="chip" title="切换时刻">夕 18:00</button>
+    <button id="btn-vocab" class="chip" title="词汇本">词汇本 <span id="vocab-count">0</span></button>
+    <button id="btn-shot" class="shutter-btn" title="拍照 (F)">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+      </svg>
+    </button>
+    <div id="joystick"><div id="joy-knob"></div></div>
+  </div>
+
+  <!-- 拍照白闪 -->
+  <div id="flash"></div>
+
+  <!-- 单词卡 -->
+  <div id="card-backdrop" class="hidden">
+    <div id="word-card">
+      <div id="card-cat-bar"></div>
+      <div id="card-new">新单词</div>
+      <div id="card-ja"></div>
+      <div id="card-kana"></div>
+      <div id="card-romaji"></div>
+      <div id="card-zh"></div>
+      <button id="btn-speak">发音 🔊</button>
+      <button id="btn-close-card">关闭</button>
+    </div>
+  </div>
+
+  <!-- 词汇库抽屉 -->
+  <div id="vocab-drawer" class="hidden">
+    <div id="vocab-header">
+      <span>词汇本</span>
+      <button id="btn-close-vocab">×</button>
+    </div>
+    <div id="vocab-body"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

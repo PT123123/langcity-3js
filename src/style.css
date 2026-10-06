@@ -1,0 +1,287 @@
+:root {
+  --washi: rgba(247, 243, 234, 0.92);
+  --washi-solid: #f7f3ea;
+  --ink: #4a4238;
+  --ink-soft: #8a7f70;
+  --vermilion: #c94f4f;
+  --gold: #ffd27a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #2b2f4a;
+  font-family: 'Noto Sans JP', sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+
+#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+.hidden { display: none !important; }
+
+/* ---------- HUD ---------- */
+#hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+
+.chip {
+  pointer-events: auto;
+  position: absolute;
+  border: none;
+  border-radius: 999px;
+  background: var(--washi);
+  color: var(--ink);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  box-shadow: 0 2px 10px rgba(42, 32, 24, 0.18);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.chip:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(42, 32, 24, 0.25); }
+.chip:active { transform: translateY(0); }
+
+#btn-time { top: 14px; left: 14px; }
+#btn-vocab { top: 14px; right: 14px; }
+#btn-vocab span { color: var(--vermilion); font-weight: 700; margin-left: 2px; }
+
+.shutter-btn {
+  pointer-events: auto;
+  position: absolute;
+  right: 22px;
+  bottom: 26px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3px solid var(--washi-solid);
+  background: rgba(42, 32, 24, 0.35);
+  color: var(--washi-solid);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(42, 32, 24, 0.3);
+  backdrop-filter: blur(4px);
+  transition: transform 0.12s ease;
+}
+.shutter-btn:active { transform: scale(0.92); }
+
+/* 虚拟摇杆（触屏） */
+#joystick {
+  pointer-events: auto;
+  position: absolute;
+  left: 26px;
+  bottom: 30px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: rgba(247, 243, 234, 0.14);
+  border: 2px solid rgba(247, 243, 234, 0.35);
+  display: none;
+  touch-action: none;
+}
+#joy-knob {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--washi);
+  box-shadow: 0 2px 8px rgba(42, 32, 24, 0.3);
+  transform: translate(-50%, -50%);
+}
+body.touch #joystick { display: block; }
+
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: 108px;
+  transform: translateX(-50%);
+  background: var(--washi);
+  color: var(--ink);
+  font-size: 13px;
+  padding: 7px 18px;
+  border-radius: 999px;
+  box-shadow: 0 2px 10px rgba(42, 32, 24, 0.2);
+  animation: hint-pulse 1.6s ease-in-out infinite;
+  white-space: nowrap;
+}
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+
+/* ---------- 快门白闪 ---------- */
+#flash {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 40;
+  transition: opacity 0.12s ease-out;
+}
+#flash.on { opacity: 1; }
+
+/* ---------- 单词卡 ---------- */
+#card-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 32, 24, 0.32);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fade-in 0.2s ease;
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+#word-card {
+  position: relative;
+  width: min(320px, 86vw);
+  background: var(--washi-solid);
+  border-radius: 18px;
+  padding: 30px 28px 24px 40px;
+  box-shadow: 0 18px 60px rgba(20, 14, 8, 0.45);
+  text-align: center;
+  overflow: hidden;
+  animation: card-pop 0.28s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@keyframes card-pop {
+  from { transform: scale(0.86) translateY(14px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+#card-cat-bar {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 8px;
+  border-radius: 0;
+}
+#card-new {
+  position: absolute;
+  top: 14px; right: -34px;
+  transform: rotate(38deg);
+  background: var(--vermilion);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 4px 40px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+#card-ja {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 46px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.15;
+  margin-top: 4px;
+}
+#card-kana { font-size: 19px; color: var(--ink); margin-top: 8px; }
+#card-romaji { font-size: 12.5px; color: var(--ink-soft); letter-spacing: 0.6px; margin-top: 3px; }
+#card-zh {
+  font-size: 14px;
+  color: var(--ink);
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(74, 66, 56, 0.28);
+}
+#btn-speak, #btn-close-card {
+  display: inline-block;
+  border: none;
+  border-radius: 999px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13.5px;
+  padding: 9px 22px;
+  margin: 18px 6px 0;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+#btn-speak { background: var(--vermilion); color: #fff; }
+#btn-close-card { background: rgba(74, 66, 56, 0.12); color: var(--ink); }
+#btn-speak:active, #btn-close-card:active { transform: scale(0.94); }
+
+/* ---------- 词汇库抽屉 ---------- */
+#vocab-drawer {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(340px, 88vw);
+  background: var(--washi);
+  backdrop-filter: blur(10px);
+  box-shadow: -10px 0 40px rgba(20, 14, 8, 0.3);
+  z-index: 45;
+  transform: translateX(105%);
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.4, 1);
+  display: flex;
+  flex-direction: column;
+}
+#vocab-drawer.open { transform: translateX(0); }
+
+#vocab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  font-family: 'Noto Serif JP', serif;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+  border-bottom: 1px solid rgba(74, 66, 56, 0.14);
+}
+#btn-close-vocab {
+  border: none;
+  background: none;
+  font-size: 26px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+#vocab-body { flex: 1; overflow-y: auto; padding: 10px 18px 24px; }
+#vocab-body::-webkit-scrollbar { width: 5px; }
+#vocab-body::-webkit-scrollbar-thumb { background: rgba(74,66,56,0.25); border-radius: 3px; }
+
+.vocab-cat { margin-top: 14px; }
+.vocab-cat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.vocab-cat-head .ratio { font-weight: 500; color: var(--ink-soft); font-size: 12px; }
+.vocab-bar {
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(74, 66, 56, 0.12);
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.vocab-bar > div { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+
+.vocab-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  cursor: pointer;
+  color: var(--ink-soft);
+  transition: background 0.12s ease;
+}
+.vocab-item:hover { background: rgba(74, 66, 56, 0.08); }
+.vocab-item.found { color: var(--ink); }
+.vocab-item .zh { margin-left: auto; font-size: 11.5px; opacity: 0.75; }
+.vocab-item .new-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--vermilion);
+  align-self: center;
+  flex: none;
+}
