@@ -1,6 +1,6 @@
 // cat.js — 程序化小猫（真实比例：肩高 ~0.23m）+ 球面行走（§1 玩法 MVP）
 import * as THREE from 'three';
-import { R, terrainH, planToLatLon } from '../world/layout.js';
+import { R, groundHeight, planToLatLon } from '../world/layout.js';
 import { worldToPlan } from '../world/planet.js';
 import { resolveCollisions } from '../world/collision.js';
 import { mat } from '../world/materials.js';
@@ -172,9 +172,9 @@ export class Cat {
     }
     this.wantJump = false;
 
-    // 高度 = 地形 + 跳跃
+    // 高度 = 造成后的可走面（含路堤/台地/梯道）+ 跳跃
     const plan = worldToPlan(this._pos);
-    const groundH = terrainH(plan.x, plan.z);
+    const groundH = groundHeight(plan.x, plan.z);
     const surfaceR = R + groundH;
     if (!this.grounded) {
       this.airV -= G * dt;

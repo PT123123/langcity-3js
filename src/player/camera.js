@@ -1,6 +1,6 @@
 // camera.js — 第三人称跟随相机（§5：距离 2.6m、仰角 18°、lerp 软跟随、FOV 50）
 import * as THREE from 'three';
-import { R, terrainH } from '../world/layout.js';
+import { R, groundHeight } from '../world/layout.js';
 import { worldToPlan } from '../world/planet.js';
 
 const DIST = 2.6;
@@ -58,9 +58,9 @@ export class FollowCamera {
       .addScaledVector(this._dir, this.dist * Math.cos(this.pitch))
       .addScaledVector(this._up, this.dist * Math.sin(this.pitch));
 
-    // 防止钻地：不低于地表 0.35m
+    // 防止钻地：不低于可走面 0.35m（含台地/梯道，否则站在高台上相机穿顶面）
     const plan = worldToPlan(this._desired);
-    const minR = R + terrainH(plan.x, plan.z) + 0.35;
+    const minR = R + groundHeight(plan.x, plan.z) + 0.35;
     if (this._desired.length() < minR) this._desired.setLength(minR);
 
     // 首帧直接就位（避免从星球中心飞出）

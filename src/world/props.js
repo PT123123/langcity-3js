@@ -3,6 +3,7 @@
 // jitterPos=null 时由 town 合并阶段按世界坐标补抖动。
 import * as THREE from 'three';
 import { mat, plainToonMaterial, C } from './materials.js';
+import { buildingHeight } from '../map/style.js';
 
 // ---------- 小工具 ----------
 function box(w, h, d, color, bucket, x = 0, y = 0, z = 0, ry = 0) {
@@ -79,10 +80,41 @@ const WALLS = [C.wallWhite, C.wallGray, C.wallYellow, C.wallBrick, 0xf6e8d8];
 // messenger 屋顶色：灰粉 mauve 主导，配灰蓝/鼠尾草绿
 const ROOFS = [C.roofMauve, C.roofBlue, C.roofGreen, 0xb9a89a, C.roofPink];
 
-export function buildHouse(v = 0) {
+// ---------- 外观参数 ----------
+// 层数/层高/上下限的真源在 src/map/style.js（纯算式，Node 机检也要能读），这里只补色板。
+export function styleFor(kind, p = {}) {
+  const bh = buildingHeight(kind, p.floors);
+  const v = p.v || 0;
+  return {
+    floors: bh?.floors ?? 0,
+    fh: bh?.fh ?? 0,
+    body: bh?.body ?? 0,                                  // 墙体顶（米）：builder 拿它当 H
+    height: bh?.total ?? 0,                               // 连屋顶构件的扎眼高度（面板报数用）
+    wall: p.wall ?? WALLS[v % WALLS.length],
+    roof: p.roof ?? ROOFS[v % ROOFS.length],
+    v,
+  };
+}
+
+/** 一整层的窗带：n 格窗沿 x 排开，两侧面各一格（高楼重复调用） */
+function windowBand(g, { W, D, y, n, ww = 0.62, wh = 0.68, color = C.glassDark, bucket = 'glass' }) {
+  for (let i = 0; i < n; i++) {
+    const x = -W / 2 + (W / n) * (i + 0.5);
+    g.add(box(ww, wh, 0.05, color, bucket, x, y, D / 2 + 0.02));
+    g.add(box(ww, wh, 0.05, color, bucket, x, y, -(D / 2 + 0.02)));
+  }
+  const m = Math.max(1, Math.round(D / 1.3));
+  for (let i = 0; i < m; i++) {
+    const z = -D / 2 + (D / m) * (i + 0.5);
+    g.add(box(0.05, wh, ww, color, bucket, W / 2 + 0.02, y, z));
+    g.add(box(0.05, wh, ww, color, bucket, -(W / 2 + 0.02), y, z));
+  }
+}
+
+export function buildHouse(v = 0, s = 1, p = {}) {
   const g = new THREE.Group();
-  const wall = WALLS[v % WALLS.length];
-  const roof = ROOFS[v % ROOFS.length];
+  const st = styleFor('house', { ...p, v });
+  const wall = st.wall, roof = st.roof;
   const W = 3.2, D = 2.8, H = 2.1;
   g.add(box(W, H, D, wall, 'concrete', 0, H / 2, 0));
   // 屋檐基座
@@ -103,28 +135,136 @@ export function buildHouse(v = 0) {
   return g;
 }
 
-export function buildMansion(v = 0) {
+export function buildMansion(v = 0, s = 1, p = {}) {
   const g = new THREE.Group();
-  const wall = v % 2 ? 0xd6cfc2 : C.wallGray;
-  const W = 4.2, D = 3.2, H = 4.6;
+  const st = styleFor('mansion', { ...p, v });
+  const wall = p.wall ?? (v % 2 ? 0xd6cfc2 : C.wallGray);
+  const W = 4.2, D = 3.2, FH = st.fh;
+  const H = st.body;     // 1.15 底层 + 上层×层高 + 0.75 屋顶层，算式在 style.js
   g.add(box(W, H, D, wall, 'concrete', 0, H / 2, 0));
-  g.add(box(W + 0.2, 0.3, D + 0.2, C.roofDark, 'concrete', 0, H + 0.12, 0)); // 女儿墙
-  // 窗阵
-  for (let fl = 0; fl < 3; fl++) {
+  g.add(box(W + 0.2, 0.3, D + 0.2, p.roof ?? C.roofDark, 'concrete', 0, H + 0.12, 0)); // 女儿墙
+  // 窗阵：每层三格正面 + 侧面
+  for (let fl = 0; fl < st.floors; fl++) {
     for (let i = 0; i < 3; i++) {
-      g.add(box(0.66, 0.72, 0.05, C.glassDark, 'glass', -1.3 + i * 1.3, 1.15 + fl * 1.35, D / 2 + 0.02));
-      g.add(box(0.05, 0.72, 0.9, C.glassDark, 'glass', W / 2 + 0.02, 1.15 + fl * 1.35, -0.5 + (i % 2) * 1.4));
+      g.add(box(0.66, 0.72, 0.05, C.glassDark, 'glass', -1.3 + i * 1.3, 1.15 + fl * FH, D / 2 + 0.02));
+      g.add(box(0.05, 0.72, 0.9, C.glassDark, 'glass', W / 2 + 0.02, 1.15 + fl * FH, -0.5 + (i % 2) * 1.4));
     }
   }
   // 入口
   g.add(box(1.0, 1.3, 0.1, 0x6b6055, 'wood', 0, 0.65, D / 2 + 0.03));
   g.add(box(1.5, 0.1, 0.7, C.concrete ?? 0xb5ab9c, 'concrete', 0, 0.05, D / 2 + 0.35));
-  // 阳台栏杆
-  for (let fl = 1; fl < 3; fl++) {
-    g.add(box(1.9, 0.05, 0.05, C.galvanized ?? 0x9aa0a4, 'galvanized', 1.35, 1.6 + fl * 1.35 - 0.7, D / 2 + 0.18));
+  // 阳台栏杆：二层以上正面右侧
+  for (let fl = 1; fl < st.floors; fl++) {
+    g.add(box(1.9, 0.05, 0.05, C.galvanized ?? 0x9aa0a4, 'galvanized', 1.35, 1.6 + fl * FH - 0.7, D / 2 + 0.18));
   }
   // 空调外机
   g.add(box(0.5, 0.4, 0.3, 0xb8bdbf, 'galvanized', -W / 2 + 0.6, 1.0, D / 2 + 0.12));
+  return g;
+}
+
+// ---------- 高层：塔楼 / 写字楼 / 酒店（层数由 p.floors 决定） ----------
+export function buildTower(v = 0, s = 1, p = {}) {
+  const g = new THREE.Group();
+  const st = styleFor('tower', { ...p, v });
+  const W = 3.4, D = 2.9, FH = st.fh;
+  const H = st.body;     // 0.85 骑柱层 + 整层数×层高
+  g.add(box(W, H, D, st.wall, 'concrete', 0, H / 2, 0));
+  // 底层：骑柱（通透的门厅）+ 入口雨篷
+  for (const [ox, oz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+    g.add(box(0.22, 0.85, 0.22, 0xa89e90, 'concrete', ox * (W / 2 - 0.2), 0.42, oz * (D / 2 - 0.2)));
+  }
+  g.add(box(1.7, 0.08, 0.9, 0xb9b0a2, 'concrete', 0, 0.9, D / 2 + 0.4));
+  g.add(box(1.2, 1.15, 0.06, C.glassDark, 'glass', 0, 0.6, D / 2 + 0.03));
+  // 每一层：窗带 + 正面阳台（阳台板 + 栏杆）
+  for (let fl = 0; fl < st.floors; fl++) {
+    const y = 0.85 + fl * FH + FH * 0.55;
+    windowBand(g, { W, D, y, n: 3, ww: 0.7, wh: 0.8 });
+    g.add(box(1.5, 0.06, 0.55, 0xc7bdaf, 'concrete', -0.9, y - FH * 0.42, D / 2 + 0.27));
+    g.add(box(1.5, 0.42, 0.04, C.glassDark, 'glass', -0.9, y - FH * 0.42 + 0.24, D / 2 + 0.52));
+  }
+  // 屋顶：女儿墙 + 水箱 + 空调机组 + 天线
+  g.add(box(W + 0.24, 0.34, D + 0.24, p.roof ?? 0x9a948a, 'concrete', 0, H + 0.17, 0));
+  g.add(cyl(0.42, 0.42, 0.72, 0xb8bdbf, 'galvanized', -0.85, H + 0.7, -0.5, 10));
+  g.add(box(0.7, 0.34, 0.5, 0xa9b0b3, 'galvanized', 0.8, H + 0.5, 0.4));
+  g.add(box(0.5, 0.28, 0.4, 0xa9b0b3, 'galvanized', 0.8, H + 0.47, -0.5));
+  g.add(cyl(0.025, 0.03, 1.5, 0x8a9298, 'galvanized', W / 2 - 0.5, H + 1.05, -(D / 2 - 0.5), 6));
+  g.add(sph(0.055, C.vermillion, 'neon', W / 2 - 0.5, H + 1.82, -(D / 2 - 0.5), 8));   // 航空障碍灯
+  return g;
+}
+
+export function buildOffice(v = 0, s = 1, p = {}) {
+  const g = new THREE.Group();
+  const st = styleFor('office', { ...p, v });
+  const W = 4.0, D = 3.2, FH = st.fh;
+  const H = st.body;     // 1.3 通高门厅 + 整栋层数×层高
+  // 体量：核心墙作底，外面逐层挂玻璃带与层间墙，四角留混凝土壁柱
+  g.add(box(W - 0.5, H - 1.3, D - 0.5, 0x7d8a92, 'concrete', 0, 1.3 + (H - 1.3) / 2, 0));
+  for (const [ox, oz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+    g.add(box(0.34, H, 0.34, st.wall, 'concrete', ox * (W / 2 - 0.17), H / 2, oz * (D / 2 - 0.17)));
+  }
+  for (let fl = 0; fl < st.floors; fl++) {
+    const y = 1.3 + fl * FH;
+    const gh = FH * 0.66;                                     // 玻璃净高
+    g.add(box(W - 0.6, gh, 0.06, C.glassDark, 'glass', 0, y + FH * 0.42, D / 2 + 0.01));
+    g.add(box(W - 0.6, gh, 0.06, C.glassDark, 'glass', 0, y + FH * 0.42, -(D / 2 + 0.01)));
+    g.add(box(0.06, gh, D - 0.6, C.glassDark, 'glass', W / 2 + 0.01, y + FH * 0.42, 0));
+    g.add(box(0.06, gh, D - 0.6, C.glassDark, 'glass', -(W / 2 + 0.01), y + FH * 0.42, 0));
+    g.add(box(W - 0.5, FH - gh, 0.1, st.wall, 'concrete', 0, y + FH - (FH - gh) / 2, D / 2 + 0.02));
+    // 竖向分格（每 0.85 米一根竖框）
+    const mull = Math.max(2, Math.round(W / 0.85));
+    for (let i = 1; i < mull; i++) {
+      const x = -W / 2 + 0.25 + ((W - 0.5) / mull) * i;
+      g.add(box(0.05, gh, 0.08, 0x9aa4aa, 'galvanized', x, y + FH * 0.42, D / 2 + 0.04));
+    }
+  }
+  // 门厅：通高玻璃 + 雨篷 + 转门柱
+  g.add(box(W - 0.8, 1.2, 0.06, C.glassDark, 'glass', 0, 0.62, D / 2 + 0.03));
+  g.add(box(W + 0.5, 0.12, 1.1, p.roof ?? 0x9a948a, 'concrete', 0, 1.28, D / 2 + 0.55));
+  g.add(cyl(0.09, 0.09, 1.25, 0x8a9298, 'galvanized', -1.2, 0.62, D / 2 + 0.9, 8));
+  g.add(cyl(0.09, 0.09, 1.25, 0x8a9298, 'galvanized', 1.2, 0.62, D / 2 + 0.9, 8));
+  // 屋顶：机房 + 水塔 + 招牌 + 障碍灯
+  g.add(box(1.6, 0.6, 1.2, 0xb0a898, 'concrete', -0.7, H + 0.3, -0.4));
+  g.add(box(0.6, 0.36, 0.5, 0xa9b0b3, 'galvanized', 1.2, H + 0.18, 0.6));
+  const sign = textPlate('会社', 1.5, 0.42, { bg: '#efe8db', fg: '#4a4238', w: 256, h: 72, font: '700 44px "Noto Sans JP"' }, 'paint');
+  sign.position.set(0, H + 0.5, D / 2 - 0.1);
+  g.add(sign);
+  g.add(cyl(0.02, 0.03, 1.2, 0x8a9298, 'galvanized', 1.3, H + 0.9, -1.0, 6));
+  g.add(sph(0.05, C.vermillion, 'neon', 1.3, H + 1.52, -1.0, 8));
+  return g;
+}
+
+export function buildHotel(v = 0, s = 1, p = {}) {
+  const g = new THREE.Group();
+  const st = styleFor('hotel', { ...p, v });
+  const W = 4.4, D = 3.4, FH = st.fh;
+  const H = st.body;     // 1.5 门厅 + 整栋层数×层高
+  g.add(box(W, H, D, st.wall, 'concrete', 0, H / 2, 0));
+  // 竖向窗带（每 0.95 米一列，正面/背面），层间一条装饰线脚
+  const cols = Math.max(2, Math.round(W / 0.95));
+  for (let i = 0; i < cols; i++) {
+    const x = -W / 2 + (W / cols) * (i + 0.5);
+    g.add(box(0.34, H - 1.9, 0.06, C.glassDark, 'glass', x, 1.5 + (H - 1.9) / 2, D / 2 + 0.02));
+    g.add(box(0.34, H - 1.9, 0.06, C.glassDark, 'glass', x, 1.5 + (H - 1.9) / 2, -(D / 2 + 0.02)));
+  }
+  for (const sg of [-1, 1]) {
+    g.add(box(0.06, H - 1.9, 0.34, C.glassDark, 'glass', sg * (W / 2 + 0.02), 1.5 + (H - 1.9) / 2, 0));
+  }
+  for (let fl = 1; fl <= st.floors; fl++) {
+    g.add(box(W + 0.1, 0.07, D + 0.1, 0xa89e8c, 'concrete', 0, 1.5 + fl * FH, 0));
+  }
+  // 门厅：暖光玻璃 + 大雨篷（车落着）+ 台阶
+  g.add(box(W - 1.2, 1.4, 0.06, C.windowWarm, 'glass', 0, 0.72, D / 2 + 0.03));
+  g.add(box(2.9, 0.14, 1.5, p.roof ?? 0x8a847c, 'concrete', 0, 1.55, D / 2 + 0.75));
+  for (const sg of [-1, 1]) g.add(cyl(0.07, 0.07, 1.55, 0x8a9298, 'galvanized', sg * 1.3, 0.78, D / 2 + 1.4, 8));
+  g.add(box(2.2, 0.12, 0.8, 0xc7bdaf, 'concrete', 0, 0.06, D / 2 + 0.9));
+  // 屋顶：竖招牌「ホテル」+ 霓虹 + 机房
+  const board = box(0.72, 1.5, 0.12, 0xe9e2d4, 'paint', 1.35, H + 0.75, D / 2 - 0.2);
+  g.add(board);
+  const name = textPlate('ホテル', 0.6, 1.36, { bg: '#f2ece0', fg: '#c94f4f', w: 160, h: 360, vertical: true, font: '700 120px "Noto Sans JP"' }, 'paint');
+  name.position.set(1.35, H + 0.75, D / 2 - 0.06);
+  g.add(name);
+  for (let i = 0; i < 4; i++) g.add(sph(0.045, C.lampWarm, 'neon', 1.35, H + 0.25 + i * 0.34, D / 2 + 0.02, 6));
+  g.add(box(1.5, 0.55, 1.1, 0xb0a898, 'concrete', -1.1, H + 0.28, -0.5));
   return g;
 }
 
@@ -865,6 +1005,7 @@ export function buildCrossing() {
 
 export const BUILDERS = {
   house: buildHouse, mansion: buildMansion, station: buildStation,
+  tower: buildTower, office: buildOffice, hotel: buildHotel,
   konbini: buildKonbini, ramen: buildRamen, cafe: buildCafe,
   supermarket: buildSupermarket, postOffice: buildPostOffice,
   school: buildSchool, hospital: buildHospital, bank: buildBank,

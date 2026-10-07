@@ -9,5 +9,8 @@ Thumbs.db
 .scratch-maa/
 variant-z/.scratch/
 
+# 编辑器每次存盘都留一份回滚备份，攒在本地就够了，别污染 git status
+data/town-plan.backup-*.json
+
 # 截图证据：整目录默认不入库，只有 docs 里点名的几张用 git add -f 显式带上
 variant-z/shots/audit/

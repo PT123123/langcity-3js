@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LangCity 地图编辑器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style-editor.css" />
+</head>
+<body>
+  <header id="topbar">
+    <div class="brand">言叶之城 · <b>地图编辑器</b></div>
+    <div class="toolbar">
+      <button id="btn-undo" class="chip" title="Ctrl+Z">↶ 撤销</button>
+      <button id="btn-redo" class="chip" title="Ctrl+Y">↷ 重做</button>
+      <span class="sep"></span>
+      <button id="btn-fit" class="chip" title="回到全景">归位</button>
+      <button id="btn-trees" class="chip toggle" title="显示/隐藏森林装饰树">森林树</button>
+      <button id="btn-phase" class="chip" title="切换预览时刻">夕 18:00</button>
+      <button id="btn-check" class="chip">地图体检</button>
+      <span class="sep"></span>
+      <button id="btn-save" class="chip primary" title="Ctrl+S">保存到文件</button>
+      <button id="btn-download" class="chip">下载 JSON</button>
+    </div>
+    <div id="save-state" class="save-state">已载入</div>
+  </header>
+
+  <main id="layout">
+    <aside id="palette">
+      <div class="aside-tabs">
+        <button class="tab on" data-tab="place">摆物件</button>
+        <button class="tab" data-tab="batch">批量改外观</button>
+      </div>
+      <div class="tab-pane" id="tab-place">
+        <input id="palette-search" placeholder="找物件：便利店 / 路灯…" />
+        <div id="palette-list"></div>
+        <p class="note">点一个，再到平面图上点一下放下；或直接点画布空白处按 <b>Shift+A</b> 取消。</p>
+      </div>
+      <div class="tab-pane hidden" id="tab-batch"><div id="batch-body"></div></div>
+    </aside>
+
+    <section id="center">
+      <div id="plan-wrap"><canvas id="plan"></canvas>
+        <div id="view-hint">滚轮缩放 · 右键拖动平移 · Alt 拖动=0.5 米步进 · 红点=旋转手柄</div>
+      </div>
+      <div id="preview-wrap">
+        <canvas id="preview"></canvas>
+        <div id="preview-busy" class="hidden">正在重建 3D 预览…</div>
+        <div id="preview-caption">3D 实景预览（拖动转视角 / 滚轮缩放）</div>
+      </div>
+    </section>
+
+    <aside id="inspector">
+      <h3 id="insp-title">没选中东西</h3>
+      <div id="insp-body"></div>
+      <h3>世界参数</h3>
+      <div id="world-body"></div>
+      <div id="problems">
+        <h3>体检结果 <span id="problem-count" class="count">0</span></h3>
+        <ul id="problem-list"></ul>
+      </div>
+    </aside>
+  </main>
+
+  <footer id="statusbar">
+    <span id="stat-places">—</span>
+    <span id="stat-roads">—</span>
+    <span id="stat-undo">—</span>
+    <span id="stat-batch">—</span>
+    <span id="stat-hint">快捷键：Del 删除 · Ctrl+D 复制 · Q/E 转向 · 方向键挪 0.1 米 · Ctrl+Z/Y 撤销重做 · Ctrl+S 保存</span>
+  </footer>
+
+  <div id="floatbar" class="hidden"><span id="float-msg"></span><button id="float-act"></button></div>
+
+  <script type="module" src="/src/editor/app.js"></script>
+</body>
+</html>

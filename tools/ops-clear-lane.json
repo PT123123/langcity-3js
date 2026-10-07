@@ -1,0 +1,9 @@
+[
+  { "op": "place.move", "where": { "ids": [24] }, "dx": -2.5, "dz": 2.1 },
+  { "op": "place.rotate", "where": { "ids": [25] }, "rotDeg": 90 },
+  { "op": "place.move", "where": { "ids": [25] }, "dx": -0.2 },
+  { "op": "place.move", "where": { "ids": [20] }, "dx": -0.5 },
+  { "op": "place.move", "where": { "ids": [26] }, "dx": 0.9 },
+  { "op": "place.move", "where": { "ids": [5] }, "dz": 1.5 },
+  { "op": "place.move", "where": { "ids": [47] }, "dz": -1.95 }
+]

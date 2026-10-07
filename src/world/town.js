@@ -2,8 +2,10 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {
-  PLACES, FOREST_TREES, planToVec3, planQuat, terrainH,
+  PLAN, PLACES, FOREST_TREES, planToVec3, planQuat, TERRAIN_FIELD,
 } from './layout.js';
+import { makeField, localToPlan } from '../map/terrain.js';
+import { buildTerrainWorks } from './terrainwork.js';
 import { BUILDERS } from './props.js';
 import { makeBucketMaterial, bakeColor, addOutline } from './materials.js';
 
@@ -35,7 +37,13 @@ const BLOB_KINDS = new Set([
   'crossing', 'flowerbed', 'fountain', 'wall', 'fence', 'tree', 'sakura',
 ]);
 
-export function buildTown(scene) {
+export function buildTown(scene, data) {
+  // data（编辑器实时预览用）可覆写整份 plan；缺省 = layout.js 的构建期数据
+  const P = data || PLAN;
+  const PLACES_D = P.places || PLACES;
+  const TREES_D = P.forestTrees || FOREST_TREES;
+  const field = data ? makeField(data) : TERRAIN_FIELD;
+  const terrain = (x, z) => field.surface(x, z);
   const bucketGeos = {};
   const decals = [];        // 带贴图的小面片（不合并）
   const interactables = [];
@@ -43,9 +51,9 @@ export function buildTown(scene) {
   const placeOne = (p, interactive) => {
     const builder = BUILDERS[p.kind];
     if (!builder) return;
-    const inst = builder(p.v || 0, p.s || 1);
+    const inst = builder(p.v || 0, p.s || 1, p);
 
-    const pos = planToVec3(p.x, p.z, terrainH(p.x, p.z));
+    const pos = planToVec3(p.x, p.z, terrain(p.x, p.z));
     const quat = planQuat(p.x, p.z, p.rotY || 0);
     const placeM = new THREE.Matrix4().compose(
       pos, quat, new THREE.Vector3(1, 1, 1).multiplyScalar(p.s || 1)
@@ -96,10 +104,24 @@ export function buildTown(scene) {
     }
   };
 
-  for (const p of PLACES) placeOne(p, true);
-  for (const t of FOREST_TREES) placeOne({ kind: 'tree', x: t.x, z: t.z, rotY: t.rotY, v: t.v, s: t.s, word: '' }, false);
+  for (const p of PLACES_D) placeOne(p, true);
+  for (const t of TREES_D) placeOne({ kind: 'tree', x: t.x, z: t.z, rotY: t.rotY, v: t.v, s: t.s, word: '' }, false);
 
-  buildWires(bucketGeos);
+  // —— 造成：台地顶面 / 挡土墙 / 石阶 / 坡道，走同一条合并管线 ——
+  buildTerrainWorks(bucketGeos, field, P);
+  for (const rec of P.terraces || []) {
+    if (!rec.word) continue;
+    const pos = planToVec3(rec.x, rec.z, field.surface(rec.x, rec.z));
+    interactables.push({ word: rec.word, kind: 'terrace', pos, radius: 2.6, plan: { x: rec.x, z: rec.z } });
+  }
+  for (const rec of P.flights || []) {
+    if (!rec.word) continue;
+    const mid = localToPlan(rec.x, rec.z, rec.rotY || 0, 0, rec.run / 2);
+    const pos = planToVec3(mid.x, mid.z, field.surface(mid.x, mid.z));
+    interactables.push({ word: rec.word, kind: rec.kind || 'stair', pos, radius: 2.0, plan: mid });
+  }
+
+  buildWires(bucketGeos, PLACES_D, field);
 
   // —— 合并成每桶一个 Mesh ——
   const merged = new THREE.Group();
@@ -144,14 +166,14 @@ function addBlob(bucketGeos, pos, quat, kind) {
 }
 
 // ---------- 电线（杆间垂弧） ----------
-function buildWires(bucketGeos) {
-  const poles = PLACES.filter((p) => p.kind === 'pole');
+function buildWires(bucketGeos, places, field) {
+  const poles = places.filter((p) => p.kind === 'pole');
   if (poles.length < 2) return;
   const wireColor = 0x35393d;
   for (let i = 0; i < poles.length - 1; i++) {
     const a = poles[i], b = poles[i + 1];
-    const pa = planToVec3(a.x, a.z, terrainH(a.x, a.z) + 4.3);
-    const pb = planToVec3(b.x, b.z, terrainH(b.x, b.z) + 4.3);
+    const pa = planToVec3(a.x, a.z, field.surface(a.x, a.z) + 4.3);
+    const pb = planToVec3(b.x, b.z, field.surface(b.x, b.z) + 4.3);
     const mid = pa.clone().add(pb).multiplyScalar(0.5);
     const sag = pa.distanceTo(pb) * 0.09;
     mid.addScaledVector(mid.clone().normalize(), -sag);
