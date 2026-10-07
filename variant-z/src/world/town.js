@@ -6,6 +6,8 @@ import { PBR, M } from './materials.js';
 import { handTex, handRough, tintFor } from './textures.js';
 import { ROADS, SIDEWALK_W, PLAZA, PARKING, CROSSWALKS, PLAN_C, TOWN_RECT, roadDistance, streetMesh, crosswalkMesh, roadTexture } from './townPlan.js';
 import { CITY_OBJECTS } from './cityPlan.js';
+import { measureFoot, tan2plan, roadDirs, planYawDeg, asphaltSlack, laneDepth, KERB,
+  compactTown, layoutMetrics, PACK_CFG } from './frontage.js';
 import { wordById } from '../game/words.js';
 import { preloadProps, NPC_BY_NAME } from './props.js';
 import * as B from './buildings.js';
@@ -118,37 +120,6 @@ const HARD_KINDS = new Set([
 // 地基比建筑对角半径多出的余量 / 两块地基之间至少留出的走道（猫宽 0.7 + 余量）
 const PAD_GAP = 0.7;
 const STREET = 1.3;
-
-/** 量出模型在本地的真实占地（构建器都以 +Z 朝前、底面 y≈0 为约定）。
- *  原先写死的 BODY_R 表比实测小一半（车站写 3.4，实际 8×5），
- *  结果碰撞圈让猫走进墙里，地基又压不住墙脚。
- *  bodyOnly（楼用）：只算「体量」——平面两条边都 ≥0.6 m 的块。旗杆(0.09)、校门柱(0.3)、
- *  雨棚腿、招牌这些挂在山墙外的细件不能算进占地：8×3.8 的校舎被它们量成 10.2×9.4，
- *  于是全镇唯一放得下的 12m 街区也判成放不下，白白把校舍缩到七成（实测 shrunk@0.70）。 */
-function measureFoot(g, bodyOnly = false) {
-  g.updateMatrixWorld(true);
-  const inv = new THREE.Matrix4().copy(g.matrixWorld).invert();
-  const world = new THREE.Box3();
-  const local = new THREE.Box3();
-  const full = new THREE.Box3().makeEmpty();
-  const body = new THREE.Box3().makeEmpty();
-  let has = false, hasBody = false;
-  g.traverse((o) => {
-    if (!o.isMesh || o.isSprite || o.renderOrder === 2) return;         // blob shadow 不算体量
-    if (o.material && (o.material.transparent || o.material.depthWrite === false)) return;
-    if (!o.geometry) return;
-    world.makeEmpty().setFromObject(o);
-    if (world.isEmpty()) return;
-    local.copy(world).applyMatrix4(inv);
-    full.union(local);
-    has = true;
-    if (local.max.x - local.min.x >= 0.6 && local.max.z - local.min.z >= 0.6) { body.union(local); hasBody = true; }
-  });
-  if (!has) return { hx: 0.4, hz: 0.4, corner: 0.55, minY: 0, top: 0.8 };
-  const src = bodyOnly && hasBody ? body : full;
-  const hx = Math.max(-src.min.x, src.max.x), hz = Math.max(-src.min.z, src.max.z);
-  return { hx, hz, corner: Math.hypot(hx, hz), minY: full.min.y, top: full.max.y };
-}
 
 /** 经纬都钳回可玩带（越界就掉进海里/烘到场外） */
 function clampBand(d) {
@@ -420,76 +391,16 @@ function roadLat(rd) {
   return [-dz / L, dx / L];
 }
 
-/** 规划系是等距圆柱经纬网（townPlan.makePlanFrame）：x = λ·R·sinφ、z = R(φ−φ0)。
- *  所以「沿南北走 b 米」会让规划 x 白漂 k·b 米，k = λ·cosφ —— 规划格子和玩家脚下的
- *  切平面差一个随位置变的剪切。镇心 λ≈0 看不出来，镇缘实测到 k = −1.17：
- *  按规划法线给楼定朝向，搬到 (-34,-19) 那栋 3.2×3.0 的家与街夹 45°、角尖伸进行车道 1.4 米，
- *  而摆放期的 asphaltSlack 量出来是「余 0.18 米合规」。街是照规划铺的（它就是权威），
- *  所以把楼的角度和落点统统换到切平面上量。 */
-function planK(frame, x, z) {
-  const phi = frame.phi0Deg * Math.PI / 180 + z / frame.R;
-  const s = Math.max(0.08, Math.sin(phi));
-  return (x / (frame.R * s)) * Math.cos(phi);
-}
-/** 切平面偏移 (a=东, b=南) 米 → 规划落点 */
-function tan2plan(frame, x, z, a, b) {
-  return [x + a + planK(frame, x, z) * b, z + b];
-}
-/** 规划方向 (dx,dz) → 切平面单位方向 [a,b]（basisAt 的 yaw 就按这个口径给） */
-function plan2tan(frame, x, z, dx, dz) {
-  const a = dx - planK(frame, x, z) * dz, b = dz;
-  const L = Math.hypot(a, b) || 1;
-  return [a / L, b / L];
-}
-/** 街在某个街心点上的「真实顺街方向 + 真实法线」（切平面单位向量）。
- *  法线不能用 plan2tan(规划法线)：那是「规划法线这个方向的像」，跟画出来的街线不垂直。
- *  街线是照规划铺到球上的（它就是权威），所以法线必须取真实街线的垂线。
- *  tan→plan 的雅可比行列式 = 1（保向），故 (-rb, ra) 与 roadLat 的 (-dz, dx) 同侧。 */
-function roadDirs(frame, x, z, dx, dz) {
-  const [ra, rb] = plan2tan(frame, x, z, dx, dz);
-  return [ra, rb, -rb, ra];
-}
-/** 反向：切平面 yaw（模型真正转的角）→ 规划格子里看起来的角。
- *  小地图把街和楼都当规划矩形画，所以喂它的必须是规划角，不然镇缘的楼在图上会歪出街网。 */
-function planYawDeg(frame, x, z, yawDeg) {
-  const th = (yawDeg || 0) * Math.PI / 180;
-  const k = planK(frame, x, z);
-  return Math.atan2(Math.sin(th) + k * Math.cos(th), Math.cos(th)) * 57.2958;
-}
-
 /** 【认街线】一件楼正墙朝街时该站多远。rd.w 是**车行道半宽**
- *  （townPlan.streetMesh: 铺装半宽 = rd.w + SIDEWALK_W，路缘在 rd.w + 0.16）。
+ *  （townPlan.streetMesh: 铺装半宽 = rd.w + SIDEWALK_W，路缘在 rd.w + KERB）。
  *  原先全按 w/2 算，楼只退到沥青一半就停手：实测 16 栋实体的底圈压在铺装带上
  *  （library/bank/shrine 整圈 100%，站房 86%），门面插进街心正是「后插入模型块」。
- *  底线取「沥青 + 路缘 + 墙前 0.45m 站人」——墙线压着人行道外沿正是日本商店街的样子。
+ *  底线取「沥青 + 路缘 + 墙前站人」——墙线压着人行道外沿正是日本商店街的样子。
+ *  口径与打包器共用 frontage.laneDepth，别让认街和装箱互相拉扯。
  *  这是「尽量达成」的舒适线，只对正对的那条街要求；背街与街区中央由 asphaltSlack 兜底。 */
 function laneNeed(s, rd) {
-  if (!s.isSolid) return rd.w + 0.16 + SIDEWALK_W * 0.55;      // 街具站在人行道上
-  return rd.w + 0.16 + 0.45 + (s.foot ? s.foot.hz : s.padR || 0.4);
-}
-
-/** 【硬线】模型的底圈不能踩上任何一条街的沥青。
- *  直接量外圈，而不是拿「街心距 − 路半宽 − 投影半宽」换算：12m 街区里楼与两条平行街
- *  的距离此消彼长，换算式还得猜朝向，实测把 8 栋「墙脚咬路缘」的零退让店行误判成堵塞
- *  （laneLeft 8），改成量外圈就只剩真正骑在行车道上的那栋。
- *  人行道被墙脚吃掉不是病——日本商店街就是门面贴路缘；玩家走不过去才是病。
- *  取样点必须是**矩形**边界（四角 + 四边中点），不能是内切椭圆：
- *  早先按 8 个等角取 (cos·hx, sin·hz)，那是椭圆的点，四角比矩形短最多 41%，
- *  于是「中心压着东西大街中心线」的病栋（实测 hospital @ plan (20.6,-0.5)，体量 5.5×4.1）
- *  被量成合法，laneLeft 报 0 而玩家直接撞墙。
- *  取样点还要过一遍 tan2plan：模型是照切平面摆的，矩形在规划格子里是平行四边形，
- *  不剪切就等于用另一把尺量街（见 planK 上面那段）。 */
-function asphaltSlack(frame, hx, hz, yawDeg, x, z) {
-  const th = (yawDeg || 0) * Math.PI / 180, c = Math.cos(th), si = Math.sin(th);
-  const R = [[hx, hz], [-hx, hz], [-hx, -hz], [hx, -hz], [hx, 0], [0, hz], [-hx, 0], [0, -hz]];
-  let worst = Infinity;
-  for (const [lx0, lz0] of R) {
-    const [px, pz] = tan2plan(frame, x, z, lx0 * c + lz0 * si, -lx0 * si + lz0 * c);
-    const q = roadDistance(frame, px, pz);
-    const val = q.d - (q.rd.w + 0.16);      // 路缘石在 w + 0.16
-    if (val < worst) worst = val;
-  }
-  return worst;
+  if (!s.isSolid) return rd.w + KERB + SIDEWALK_W * 0.55;      // 街具站在人行道上
+  return laneDepth(rd, s.foot ? s.foot.hz : s.padR || 0.4);
 }
 
 /** 街区放不下就把楼缩到放得下（只缩平面，保住层高）。
@@ -738,6 +649,29 @@ function mergeCityObjects(frame, orig, city) {
   return { objects: out, ejected, stuck, offBand, city: city.length };
 }
 
+/** 每种实体各建一次模型，量出真实体量给装箱器用。
+ *  构建器的平面尺寸是确定的（buildHouse 只按 seed 换 HOUSE_SETS 的四套墙瓦，
+ *  不改 3.2×3.0 的体量），所以一次量完全镇通用；补楼另有一档平面缩放，
+ *  在 scaleSite 里乘回 foot/pad（measureFoot 走 group 本地坐标，g.scale 不进体量）。 */
+const FEET_PROBE = {};
+function probeFeet() {
+  for (const k of SOLID_KINDS) {
+    if (FEET_PROBE[k] || !BUILDERS[k]) continue;
+    FEET_PROBE[k] = measureFoot(BUILDERS[k]('probe-' + k, { kind: k }), true);
+  }
+  return FEET_PROBE;
+}
+
+/** 补楼的平面缩放：只缩 x/z、保住层高，体量与地基跟着同一档走 */
+function scaleSite(s, k) {
+  s.g.scale.set(k, 1, k);
+  const f = s.foot;
+  s.foot = { hx: f.hx * k, hz: f.hz * k, corner: f.corner * k, minY: f.minY, top: f.top };
+  s.pad = (s.pad || 0) * k;
+  s.padR = s.pad || 0.4;
+  s.sc = k;
+}
+
 export async function buildTownFromPlanetJson(scene, planet) {
   const surfaceAt = planet.surfaceAt;
   const frame = planet.planFrame;          // plan(米) ↔ 球面：整套手写街网共用它
@@ -750,6 +684,30 @@ export async function buildTownFromPlanetJson(scene, planet) {
     : mergeCityObjects(frame, data.objects || [], CITY_OBJECTS);
   const objects = merge.objects;
 
+  // ---------- 0b) 紧凑化：照街网重排落点 + 沿空闲退线补楼 ----------
+  // 为什么排在建模型之前：装箱要的是「每栋的门面宽度」，而量体量要建模型——
+  // 所以先用 probeFeet 每种实体各建一次拿到真实宽度，排完把新位置写回条目、
+  // 把补出来的楼追加进表。下游（建模型/认街/让路/压地基/落座）一律按新位置走，一个都不用改。
+  // ?compact=0 关掉这一步，用来和老图并排比截图。
+  const COMPACT = !RAW && new URLSearchParams(location.search).get('compact') !== '0';
+  let pack = null;
+  if (COMPACT) {
+    const r = compactTown({
+      frame, objects, feet: probeFeet(), solidKinds: SOLID_KINDS,
+      skipKinds: new Set([...NO_FRONTAGE, ...PARKED]), cfg: PACK_CFG,
+    });
+    for (const m of r.moves) {
+      const [px, py] = frame.planToPx(m.x, m.z);
+      m.obj.x = px; m.obj.y = py; m.obj.rot = m.yaw; m.obj.packed = 1;
+      if (m.sc && m.sc !== 1) m.obj.sc = m.sc;   // 排不进去才缩档，缩的量在 scaleSite 里乘回体量
+    }
+    for (const a of r.added) {
+      const [px, py] = frame.planToPx(a.x, a.z);
+      objects.push({ kind: a.kind, x: px, y: py, rot: a.yaw, sc: a.sc, from: 'infill', packed: 1 });
+    }
+    pack = r.info;
+  }
+
   const town = new THREE.Group();
   scene.add(town);
   const interactables = [];
@@ -761,6 +719,7 @@ export async function buildTownFromPlanetJson(scene, planet) {
     total: objects.length, noBuilder: 0, noHit: 0, inWater: 0, tooSteep: 0,
     yards: 0, yardsSkipped: 0, pads: 0, flattened: 0, attachLost: 0, slopePads: 0, reseated: 0, roadTiles: 0, frontage: 0, streetClear: 0, shrunk: 0, crosswalks: 0, plaza: 0, steep: [],
     merge: { city: merge.city, island: (data.objects || []).length, ejected: merge.ejected, stuck: merge.stuck, offBand: merge.offBand },
+    pack, metrics: null,
   };
   const noBuilderKinds = {};
 
@@ -783,7 +742,12 @@ export async function buildTownFromPlanetJson(scene, planet) {
       : yd ? yd.r
         : (cls === 1 && foot.corner >= 0.9 ? foot.corner + 0.35 : 0);
     const dir = dirFromPx(o.x, o.y);
-    sites.push({ i, o, g, foot, isSolid, cls, yd, pad, padR: pad || 0.4, dir, home: dir.clone(), yaw: o.rot || 0, fixed: o.from === 'city' });
+    const site = { i, o, g, foot, isSolid, cls, yd, pad, padR: pad || 0.4, dir, home: dir.clone(), yaw: o.rot || 0,
+      // packed = 装箱器已经把它摆在退线上定稿了：和手写城锚点同等待遇（认街免、松弛免动、
+      // 让路仍要过），下游再把它推一把就等于把刚排好的店行打回散点。
+      fixed: o.from === 'city' || !!o.packed };
+    if (o.sc) scaleSite(site, o.sc);
+    sites.push(site);
   }
   // 先认街，再松弛：顺序反了的话 relax 把楼从街面上推回野地，街道格局就白排了
   // 原版岛模式(?island=raw|intro)不走这套：street.gd 的 `_place_on_planet` 就是
@@ -1115,6 +1079,8 @@ export async function buildTownFromPlanetJson(scene, planet) {
   }
   stats.mapPins = pins.map((q) => ({ kind: q.kind, px: q.px, city: q.city }));
   stats.mapBlocks = mapBlocks;
+  // 紧凑化的验收口径：实体栋数、镇界内底圈覆盖率、楼-楼最近邻中位（真实商店街 1~3m）
+  stats.metrics = layoutMetrics(mapBlocks, TOWN_RECT);
 
   // 终检：拿「真正摆下去的位置」再量一次街廊。和 stats.blocked 对得上就是让路本身没让开，
   // 对不上就是后面某一步又把它推回去了——两种病因修法完全不同。
