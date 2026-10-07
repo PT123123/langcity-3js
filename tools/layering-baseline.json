@@ -1,0 +1,84 @@
+{
+  "note": "3D 构造点棘轮基线：只准减不准增。挪进框架入口变瘦之后，跑 node tools/layering-check.mjs --bless 重钉收紧。",
+  "owners": {
+    "MATERIAL": [
+      "src/world/materials.js",
+      "variant-z/src/world/materials.js"
+    ],
+    "GEOMETRY": [
+      "src/world/props.js",
+      "src/world/terrainwork.js",
+      "src/player/cat.js",
+      "variant-z/src/world/props.js",
+      "variant-z/src/world/buildings.js"
+    ],
+    "MERGE": [
+      "src/world/town.js",
+      "src/world/sky.js",
+      "variant-z/src/world/scatter.js"
+    ]
+  },
+  "routes": {
+    "MATERIAL": "src/world/materials.js 的 mat()／BUCKETS（分档 roughness 与抖动都在那儿）",
+    "GEOMETRY": "src/world/props.js 的 buildXxx()＋BUILDERS 登记表（造成实体走 terrainwork.js，猫本体走 cat.js）",
+    "MERGE": "src/world/town.js（按材质桶合并）／sky.js；新 kind 只在 town.js 里加桶"
+  },
+  "counts": {
+    "MATERIAL": {
+      "city": {
+        "src/editor/view3d.js": 1,
+        "src/game/interact.js": 1,
+        "src/player/cat.js": 1,
+        "src/world/materials.js": 6,
+        "src/world/props.js": 7,
+        "src/world/sky.js": 2
+      },
+      "z": {
+        "variant-z/src/game/interact.js": 1,
+        "variant-z/src/player/cat.js": 1,
+        "variant-z/src/world/buildings.js": 3,
+        "variant-z/src/world/handDrawn.js": 1,
+        "variant-z/src/world/materials.js": 5,
+        "variant-z/src/world/messenger.js": 2,
+        "variant-z/src/world/planet.js": 3,
+        "variant-z/src/world/planetMap.js": 4,
+        "variant-z/src/world/props.js": 12,
+        "variant-z/src/world/scatter.js": 2,
+        "variant-z/src/world/sky.js": 1
+      }
+    },
+    "GEOMETRY": {
+      "city": {
+        "src/editor/view3d.js": 1,
+        "src/game/interact.js": 1,
+        "src/player/cat.js": 14,
+        "src/world/planet.js": 1,
+        "src/world/props.js": 32,
+        "src/world/sky.js": 2,
+        "src/world/terrainwork.js": 3,
+        "src/world/town.js": 2
+      },
+      "z": {
+        "variant-z/src/game/interact.js": 2,
+        "variant-z/src/player/cat.js": 12,
+        "variant-z/src/world/buildings.js": 16,
+        "variant-z/src/world/planet.js": 6,
+        "variant-z/src/world/planetMap.js": 2,
+        "variant-z/src/world/props.js": 180,
+        "variant-z/src/world/scatter.js": 2,
+        "variant-z/src/world/sky.js": 1,
+        "variant-z/src/world/town.js": 1,
+        "variant-z/src/world/townPlan.js": 2
+      }
+    },
+    "MERGE": {
+      "city": {
+        "src/world/sky.js": 1,
+        "src/world/town.js": 1
+      },
+      "z": {
+        "variant-z/src/world/scatter.js": 2
+      }
+    }
+  }
+}

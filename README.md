@@ -7,8 +7,8 @@ LangCity（日语星球学习游戏，原 Godot 项目 `LangCity`）的 **Three.
 
 | | 怎么跑 | 是什么 |
 |---|---|---|
-| **城市版**（仓库根目录 `src/`） | `just run-city` → http://localhost:5174 | **纯程序化**：`src/world/layout.js` 手写路网/广场/停车场/斑马线，`src/world/planet.js` 自己建面刷路，**零外部模型** |
-| **资产版·烘场** [`variant-z/`](variant-z/) | `just run` → http://localhost:5173 | 读原版现成资产：`planets_present_full_0..9.glb` 碎块壳烘成高程场 + `planet.json` 的 245 个落点，手写街网压进路床 |
+| **城市版**（仓库根目录 `src/`） | `just run-city` → http://localhost:5174 （编辑器 `/editor.html`） | **纯程序化**：地图数据是 [`data/town-plan.json`](data/town-plan.json)（147 个落点 + 6 条**带起伏、分材质**的路 + 3 块台地 + 2 条石阶/坡道），`src/world/layout.js` 只是薄壳，`src/world/planet.js` 自己建面刷路，**零外部模型**；改图有三种等价入口 —— 地图编辑器（含「批量改外观」面板）、`/__plan/ops` 声明式接口（AI 用）、`tools/plan-ops.mjs`（命令行），见 [docs/MAP-EDITOR.md](docs/MAP-EDITOR.md) |
+| **资产版·烘场** [`variant-z/`](variant-z/) | `just run` → http://localhost:5173 （`?compact=0` 关掉紧凑化对比） | 读原版现成资产：`planets_present_full_0..9.glb` 碎块壳烘成高程场 + `planet.json` 的 245 个落点，手写街网压进路床；**楼按沿街退线装箱重排**（`src/world/frontage.js`，见 docs §13） |
 | **资产版·原版岛** | 同上 → http://localhost:5173/?island=raw （或 `?island=intro`） | **不烘场不缩放**：玩法射线直接打原版网格（`raw` = 十块碎块壳，`intro` = 菜单同款单体低模岛），245 个落点照原版口径全摆、一个不删 |
 
 > ⚠️ 三张图的来龙去脉、城市版曾被未提交删除又恢复的经过、四套素材来源清单（桌面 `LangCity/` 与
@@ -22,7 +22,10 @@ just run        # 资产版 :5173（?island=raw / ?island=intro 走原版岛）
 ```
 
 - 📐 **实现规格：[docs/HANDOFF.md](docs/HANDOFF.md)** —— 玩法范围、视觉规格（Stylized 3D 插画风/色彩表/材质分档/四时刻参数）、性价比原则、性能预算、验收清单。
+- 🚧 **分层红线：[docs/3D-LAYERING.md](docs/3D-LAYERING.md)** —— 地图/模型/材质只能通过框架操控：每层唯一归属、「手撸 → 正路」对照表、以后改 3D 的五步动作；
+  路障放在仓库根 [AGENTS.md](AGENTS.md)（AI 会话开头就读到），机器门是 `node tools/layering-check.mjs`。
 - 🗺️ [docs/MAP-TWO-APPS.md](docs/MAP-TWO-APPS.md) —— 四套来源、三张图的口径与踩坑记录。
+- 🛠️ [docs/MAP-EDITOR.md](docs/MAP-EDITOR.md) —— 城市版的地图编辑器：`data/town-plan.json` 真源、2D+3D 双视图、高程场（路面起伏/台地/石阶）、批量改外观、`/__plan/ops` AI 接口、生成器与四道机检门、dev 写盘接口与安全边界。
 - 📖 资产版详细说明（玩法、资产、踩坑）：[variant-z/README.md](variant-z/README.md)
 - 📦 [reference/](reference/) —— 从桌面拉回的**只读参照**：`reference/LangCity/`（原版手作数据 `data/map.json` 平面城 352 物件+显式路网、`data/planet.json`、摆件算法 `.gd`、整备工具、修复史文档）、`reference/messenger-art-assets/`（上游资产包解压）。**不要在这里改东西**，改完运行时也不读它。**这份只在本地**：上游包自己声明了未经许可不得再分发，所以没入库。
 - 📚 词库：`data/words.json`（城市版）与 `variant-z/public/data/words.json`（资产版），同一份 514 词。
@@ -55,6 +58,15 @@ just run        # 资产版 :5173（?island=raw / ?island=intro 走原版岛）
 - 后处理：Bloom + 自制 Vignette/颗粒 + OutputPass；ACESFilmic + PCFSoft 阴影
 - 星球地面为 2048×1024 逐像素程序化 equirect 贴图（道路/人行道/广场/斑马线为 SDF 绘制）
 - 星球半径 `R = 60`，城镇帽落在纬度 11°~65°（符合规格 10°~62°）
+- **地图数据真源是 `data/town-plan.json`**（147 落点 / 37 森林树 / 6 条路（3 条折线、全部带纵向起伏 + 4 种路面材质）/ 3 块台地 / 2 条石阶 / 7 斑马线 / 4 山丘），
+  `layout.js` 只导出它；地面高低由 `src/map/terrain.js` 的解析高程场统一算（猫踩的面、地面网格、挡墙碰撞、2D 底图共用一个口径）；
+  配一个地图编辑器 `:5174/editor.html`（2D 平面图 + 同源 3D 预览 + 体检 + 撤销 + 批量改外观），
+  存盘走 dev-only 的 `/__plan`（服务端验形状、sha 判冲突），序列化字节稳定所以 git diff 只跑出改动那几行
+- **改图也能让 AI 直接做**：`GET /__plan/ops` 就是说明书（op 清单 + 筛选器 + 规矩），`POST /__plan/ops` 收一批声明式 op，
+  有一条写歪就 422 且整批不落盘；命令行孪生 `tools/plan-ops.mjs`，整套语义与编辑器面板共用同一份 `src/map/ops.js`
+- **落盘前四道机检门**（不启动浏览器，一条命令 `just check`）：`npx vite-node tools/ops-check.mjs` / `tools/relief-check.mjs` / `tools/road-walk.mjs`
+  + `node tools/layering-check.mjs`（3D 分层红线：构造点棘轮 + 七条绝对红线），
+  每条断言都配一条 control 证明不是空转；新图可由 `tools/generate-town.mjs --seed N` 生成
 
 **资产版（variant-z）**
 - 碎块壳 GLB 烘焙成 240×160 高程场；`terrainMeshes = [groundMesh]`，**玩法射线只碰这张地面**
@@ -63,6 +75,10 @@ just run        # 资产版 :5173（?island=raw / ?island=intro 走原版岛）
 - `?island=raw|intro` 走「原版岛直通」：跳过标定/烘场/台地/铺街，射线直接打真实网格，
   摆放口径逐条对齐 Godot 的 `street.gd _place_on_planet`（见 §9）
 - 开发期钩子 `window.__dbg`（两套同名同口径），配 `tools/shot-receiver.mjs` 做页内截图落盘
+- **紧凑化 = 沿街退线装箱**（`variant-z/src/world/frontage.js`，管线第 0b 步）：把每条街两侧被路口切成的
+  可建段当成一维箱子，按门面宽度降序进箱（FFD）、新楼只贴着已有店行的两端长（Growth-via-Contact）。
+  实测楼-楼最近邻中位 9.27 → 4.56 m、镇界内 27 → 42 栋、包围盒 257×63 → 98×55 m。
+  这张路网只有 50 条退线 / 363 m 临街面，**46 栋就是封顶**，120 栋要改 `townPlan.ROADS`——全过程与六个踩过的坑记在 docs §13
 
 ## 后续路线（未做，按性价比排序）
 

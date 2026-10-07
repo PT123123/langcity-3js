@@ -32,6 +32,13 @@ build-city:
 preview:
     cd variant-z && npm run preview
 
+# 四道机检门全跑一遍（改地图/模型/材质前后都该跑，见 docs/3D-LAYERING.md）
+check:
+    npx vite-node tools/ops-check.mjs
+    npx vite-node tools/relief-check.mjs
+    npx vite-node tools/road-walk.mjs
+    node tools/layering-check.mjs
+
 # 安装到安卓（占位：接入 Capacitor 后把下面步骤换成真实命令）
 install:
     @echo "安卓安装尚未接入，计划走 Capacitor 打包，流程："

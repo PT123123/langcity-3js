@@ -173,11 +173,28 @@
   data/words.json             从原项目复制（LangCity/data/words.json，514 词）
   ```
 
+- **分层红线（2026-10-07 补，实现之前先读）**：地图、模型、材质都只能通过框架的入口操控，
+  不许在功能文件里手撸 —— 真源只有 `data/town-plan.json`（改它走 ops／编辑器／生成器），
+  材质只走 `src/world/materials.js` 的 `mat()`/`BUCKETS`，形状只在 `src/world/props.js` 的 `buildXxx()`，
+  地面高程只有 `src/map/terrain.js` 的 `makeField()`，碰撞只由 `SOLIDS` 推。
+  归属表、「手撸 → 正路」对照、以及以后改 3D 的五步动作在 [`docs/3D-LAYERING.md](3D-LAYERING.md)；
+  仓库根 [`AGENTS.md`](../AGENTS.md) 是给 AI 的提示词路障，`node tools/layering-check.mjs` 把它变成机器门（`just check` 一起跑）。
+  上面「全部几何程序化生成」这条仍然成立，但它约束的是**产物**，不是**在哪儿敲 `new THREE.`**——
+  程序化生成也要通过这几层的入口，否则 §2 的色彩/粗糙度体系会在某个角落里悄悄失守。
+
 ## 4. 星球与城镇布局
 
 - 半径 R≈30 的球。**上半球冠**（纬度 10°~62°）是城镇岛：地形用球面噪声做 2~3 个缓坡起伏 +
   一圈浅滩水色（球面下半部渐变为海），背面留少量树林（可走但内容稀疏）
 - 主地图数据直接在 JS 里写一张表：`{kind, word, lat, lon, rotY}`（经纬度比像素坐标直接）
+  - **2026-10-07 更新**：这张表已挪到 [`data/town-plan.json`](../data/town-plan.json)，`layout.js` 变成只导出的薄壳；
+    坐标口径从经纬度换成 plan 米制 `{kind, word, x, z, rotY}`（`x` 东、`z` 南，球面映射仍由 `planToVec3` 做）。
+    可视化编辑走 `:5174/editor.html`，见 [MAP-EDITOR.md](MAP-EDITOR.md)
+  - **同日第二轮（路面与外观）**：路不再是一片平 —— `roads[].e[]` 给纵向起伏、`surf` 换材质（沥青/石板/砖/碎石），
+    新增 `terraces[]`（台地+挡墙）与 `flights[]`（石阶/坡道）两张「造成」表，全部由 `src/map/terrain.js` 的解析高程场统一算，
+    猫踩的面/地面网格/挡墙碰撞/2D 底图共用同一个口径；建筑加了 `floors` 层数（`mansion/tower/office/hotel`，最高 11 层≈16 米）；
+    改图有三种等价入口：编辑器「批量改外观」面板、`GET/POST /__plan/ops`（AI 说明书就在 GET）、`tools/plan-ops.mjs`（命令行）；
+    一张新图也能由 `tools/generate-town.mjs` 生成。落盘前后三道机检门（§10 of MAP-EDITOR）。详见 [MAP-EDITOR.md](MAP-EDITOR.md) §6–§12
 - 参考 LangCity 城镇构成（245 物件的 kind 分布）：车站×1、便利店×1、拉面店×1、
   咖啡店×1、超市×1、邮局×1、民居×12、公寓×4、电线杆×6、路灯×6、贩卖机×5、
   垃圾桶×4、邮筒×3、长椅×4、树×12、樱×8、花×10、草×8、车×4、自行车×4、
